@@ -1,0 +1,256 @@
+@import "tailwindcss";
+
+/* Brand tokens are injected from config/restaurant.ts on <html> (see app/layout.tsx). */
+@theme inline {
+  --color-ivory: var(--brand-ivory, #f7f4ed);
+  --color-ink: var(--brand-ink, #171717);
+  --color-tomato: var(--brand-tomato, #d83b2d);
+  --color-mustard: var(--brand-mustard, #f2b544);
+  --color-stone: var(--brand-stone, #e7e4dd);
+  --color-paper: var(--brand-white, #ffffff);
+  --color-ink-soft: color-mix(in oklab, var(--brand-ink, #171717) 68%, transparent);
+  --color-tomato-ink: #b22c20; /* AA-contrast tomato for small text on ivory */
+
+  --font-display: var(--font-display-face), "Arial Narrow", Impact, sans-serif;
+  --font-sans: var(--font-sans-face), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-serif-face), Georgia, serif;
+
+  --text-mega: clamp(4.25rem, 15.5vw, 15rem);
+  --text-giant: clamp(3.25rem, 9vw, 8.5rem);
+  --text-huge: clamp(2.6rem, 6vw, 5.5rem);
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:root {
+  --header-h: 4.5rem;
+  color-scheme: light;
+}
+
+html {
+  scroll-padding-top: calc(var(--header-h) + 1rem);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-ivory);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+html:has(dialog[open]) {
+  overflow: hidden;
+}
+
+::selection {
+  background: var(--color-mustard);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-tomato);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+@layer components {
+  .container-x {
+    width: 100%;
+    max-width: 92rem;
+    margin-inline: auto;
+    padding-inline: clamp(1rem, 4vw, 3rem);
+  }
+  .display {
+    font-family: var(--font-display);
+    font-weight: 900;
+    text-transform: uppercase;
+    line-height: 0.86;
+    letter-spacing: -0.01em;
+  }
+  .eyebrow {
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    min-height: 3rem;
+    padding: 0.85rem 1.5rem;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    transition:
+      transform 0.25s var(--ease-out-expo),
+      background-color 0.2s,
+      color 0.2s,
+      box-shadow 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn:active {
+    transform: scale(0.97);
+  }
+  .btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .btn-primary {
+    background: var(--color-tomato);
+    color: var(--color-paper);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: var(--color-ink);
+  }
+  .btn-dark {
+    background: var(--color-ink);
+    color: var(--color-ivory);
+  }
+  .btn-dark:hover:not(:disabled) {
+    background: var(--color-tomato);
+  }
+  .btn-ghost {
+    box-shadow: inset 0 0 0 2px currentColor;
+  }
+  .btn-ghost:hover:not(:disabled) {
+    background: var(--color-ink);
+    color: var(--color-ivory);
+    box-shadow: inset 0 0 0 2px var(--color-ink);
+  }
+  .link-underline {
+    background: linear-gradient(currentColor, currentColor) 0 100% / 0 2px no-repeat;
+    transition: background-size 0.35s var(--ease-out-expo);
+  }
+  .link-underline:hover,
+  .link-underline:focus-visible {
+    background-size: 100% 2px;
+  }
+  .field {
+    width: 100%;
+    min-height: 3rem;
+    padding: 0.75rem 1rem;
+    background: var(--color-paper);
+    border: 2px solid var(--color-stone);
+    border-radius: 0.6rem;
+    font-size: 1rem;
+    transition: border-color 0.15s;
+  }
+  .field:focus {
+    outline: none;
+    border-color: var(--color-ink);
+  }
+  .field[aria-invalid="true"] {
+    border-color: var(--color-tomato);
+  }
+  .grain {
+    position: relative;
+    isolation: isolate;
+  }
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+    opacity: 0.06;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
+
+/* Native <dialog> transitions (progressive enhancement). */
+dialog.sheet {
+  transition:
+    opacity 0.3s,
+    transform 0.4s var(--ease-out-expo),
+    overlay 0.4s allow-discrete,
+    display 0.4s allow-discrete;
+  opacity: 0;
+}
+dialog.sheet[open] {
+  opacity: 1;
+  transform: none;
+}
+@starting-style {
+  dialog.sheet[open] {
+    opacity: 0;
+  }
+}
+dialog.sheet::backdrop {
+  background: rgb(23 23 23 / 0);
+  transition:
+    background-color 0.3s,
+    overlay 0.4s allow-discrete,
+    display 0.4s allow-discrete;
+}
+dialog.sheet[open]::backdrop {
+  background: rgb(23 23 23 / 0.55);
+}
+@starting-style {
+  dialog.sheet[open]::backdrop {
+    background: rgb(23 23 23 / 0);
+  }
+}
+dialog.sheet-right {
+  transform: translateX(100%);
+}
+dialog.sheet-bottom {
+  transform: translateY(8%);
+}
+@starting-style {
+  dialog.sheet-right[open] {
+    transform: translateX(100%);
+  }
+  dialog.sheet-bottom[open] {
+    transform: translateY(8%);
+  }
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee-track {
+  animation: marquee 40s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Pre-hydration states for GSAP-driven reveals. `.js` is set by an inline script in <head>.
+   A delayed fallback reveals content even if the animation bundle never runs. */
+@keyframes reveal-fallback {
+  to {
+    visibility: visible;
+  }
+}
+.js [data-hero-reveal],
+.js [data-stage] [data-panel]:not(:first-child),
+.js [data-stage] [data-word]:not(:first-child) {
+  visibility: hidden;
+}
+.js [data-hero-reveal] {
+  animation: reveal-fallback 0s 2.5s forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .js [data-hero-reveal] {
+    visibility: visible;
+    animation: none;
+  }
+}
