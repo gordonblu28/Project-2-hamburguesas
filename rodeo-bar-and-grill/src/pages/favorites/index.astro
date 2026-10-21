@@ -1,0 +1,493 @@
+---
+import Base from '../../layouts/Base.astro';
+import Medallon from '../../components/Medallon.astro';
+import Icono, { type NombreIcono } from '../../components/Icono.astro';
+import { NEGOCIO, DESTACADOS } from '../../lib/datos';
+import { productos, categorias, foto, precio, precioResumen, rutaProducto, ETIQUETAS, PIE_FOTO } from '../../lib/menu';
+
+const [todos, cats] = await Promise.all([productos(), categorias()]);
+const favoritos = DESTACADOS.map((id) => {
+  const p = todos.find((x) => x.id === id);
+  if (!p) throw new Error(`src/data/destacados.yaml: no existe el producto "${id}" en productos.yaml.`);
+  const cat = cats.find((c) => c.id === p.data.categoria.id)!;
+  return { p, cat, img: foto(p.data.foto) };
+});
+const total = favoritos.length;
+const dos = (n: number) => String(n).padStart(2, '0');
+---
+
+<Base
+  titulo={`Favorites · ${NEGOCIO.nombre}`}
+  descripcion={`House favorites at ${NEGOCIO.nombre}: Rodeo Botana, El Alamo Steak Plate, Rafa's Plate, quesabirrias, "The Texan" Parrillada and more.`}
+  actual="favoritos"
+  clase="pagina-favoritos"
+>
+  <section class="favoritos wrap" data-favoritos aria-labelledby="favoritos-titulo">
+    <header class="favoritos__cabeza">
+      <h1 id="favoritos-titulo" class="favoritos__titulo">
+        <span class="serif">Rodeo</span>
+        <span class="display">Favorites</span>
+      </h1>
+      <p class="favoritos__intro">Plates our menu marks as favorites or new, and house plates pictured on it.</p>
+    </header>
+
+    <div class="favoritos__carrusel" role="group" aria-roledescription="carousel" aria-label="Rodeo favorites">
+      <ol class="favoritos__lista" data-lista>
+        {
+          favoritos.map(({ p, cat, img }, i) => {
+            const d = p.data;
+            const resumen = precioResumen(p);
+            const icono: NombreIcono = cat.data.icono ?? 'estrella';
+            return (
+              <li
+                class="favorito"
+                data-favorito={p.id}
+                id={`fav-${p.id}`}
+                aria-roledescription="slide"
+                aria-label={`${i + 1} of ${total}: ${d.nombre}`}
+              >
+                <div class="favorito__escena" data-escena>
+                  <p class="favorito__fondo" aria-hidden="true">
+                    {d.nombre}
+                  </p>
+                  <div class="favorito__plato" data-plato>
+                    <Medallon
+                      img={img}
+                      alt={d.nombre}
+                      lado={340}
+                      icono={icono}
+                      marca={img ? undefined : d.numero ? `No. ${d.numero}` : cat.data.corto}
+                      prioridad={i === 0}
+                    />
+                    <span class="favorito__brillo" aria-hidden="true" />
+                  </div>
+                </div>
+
+                <div class="favorito__info" data-info>
+                  <p class="favorito__indice">
+                    <span class="favorito__numero">
+                      <span>{dos(i + 1)}</span> / {dos(total)} · {cat.data.corto}
+                    </span>
+                    {d.etiquetas.map((e) => (
+                      <span class={`chip chip--${e}`}>
+                        {e === 'favorite' && <Icono nombre="estrella" />}
+                        {e === 'angus' && <Icono nombre="res" />}
+                        {ETIQUETAS[e]}
+                      </span>
+                    ))}
+                  </p>
+                  <h2 class="favorito__nombre display">{d.nombre}</h2>
+                  {d.opciones ? (
+                    <ul class="favorito__precios">
+                      {d.opciones.map((o) => (
+                        <li>
+                          <span>{o.nombre}</span>
+                          {o.precio !== undefined && <strong>{precio(o.precio)}</strong>}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    resumen && <p class="favorito__precio">{resumen}</p>
+                  )}
+                  {d.descripcion && <p class="favorito__desc">{d.descripcion}</p>}
+                  {d.lista && <p class="favorito__desc">Flavors: {d.lista.join(' · ')}</p>}
+                  <p class="favorito__pie">
+                    <a class="favorito__enlace" href={rutaProducto(p)}>
+                      See it in the menu <Icono nombre="flecha" />
+                    </a>
+                    {img && <small>{PIE_FOTO}</small>}
+                  </p>
+                </div>
+              </li>
+            );
+          })
+        }
+      </ol>
+
+      <div class="favoritos__controles" data-controles hidden>
+        <button class="favoritos__flecha" type="button" data-paso="-1">
+          <Icono nombre="flecha-izq" />
+          <span class="visually-hidden">Previous favorite</span>
+        </button>
+        <div class="favoritos__puntos" role="tablist" aria-label="Choose a favorite">
+          {
+            favoritos.map(({ p }, i) => (
+              <button type="button" role="tab" class="favoritos__punto" data-punto={i} aria-label={p.data.nombre} aria-selected={i === 0 ? 'true' : 'false'}>
+                <span />
+              </button>
+            ))
+          }
+        </div>
+        <button class="favoritos__flecha" type="button" data-paso="1">
+          <Icono nombre="flecha" />
+          <span class="visually-hidden">Next favorite</span>
+        </button>
+      </div>
+      <p class="visually-hidden" aria-live="polite" data-anuncio></p>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { iniciarFavoritos } from '../../scripts/favoritos';
+  iniciarFavoritos();
+</script>
+
+<style>
+  .favoritos {
+    display: grid;
+    gap: 10px;
+    min-height: calc(100svh - var(--header-h) - var(--dock-h) - var(--safe-b));
+    padding-block: 10px 14px;
+    align-content: start;
+  }
+
+  .favoritos__cabeza {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  @media (max-width: 599px) {
+    .favoritos__intro {
+      display: none;
+    }
+  }
+
+  .favoritos__titulo {
+    display: grid;
+    line-height: 0.9;
+  }
+
+  .favoritos__titulo .serif {
+    font-size: clamp(1.8rem, 6vw, 2.8rem);
+    color: var(--texto-suave);
+  }
+
+  .favoritos__titulo .display {
+    font-size: clamp(2.2rem, 10vw, 4.6rem);
+  }
+
+  .favoritos__intro {
+    max-width: 30ch;
+    font-size: 0.92rem;
+    color: var(--texto-suave);
+    text-align: right;
+  }
+
+  /* Sin JavaScript: lista vertical. Con JavaScript: una diapositiva a la vez. */
+  .favoritos__lista {
+    display: grid;
+    gap: 48px;
+  }
+
+  :global(.favoritos--carrusel) .favoritos__lista {
+    position: relative;
+    display: block;
+    touch-action: pan-y;
+  }
+
+  :global(.favoritos--carrusel) .favorito:not([data-activo]) {
+    display: none;
+  }
+
+  /* Con JavaScript, el carrusel se reserva desde el primer pintado (sin salto del pie de página). */
+  :global(html.js:not(.sin-revela)) .favoritos:not(:global(.favoritos--carrusel)) .favorito:not(:first-child) {
+    display: none;
+  }
+
+  .favorito {
+    display: grid;
+    gap: 6px;
+  }
+
+  .favoritos__carrusel {
+    position: relative;
+    --alto-escena: clamp(190px, 30svh, 460px);
+  }
+
+  .favorito__escena {
+    position: relative;
+    display: grid;
+    place-items: center;
+    height: var(--alto-escena);
+    perspective: 900px;
+  }
+
+  /* Nombre gigante en contorno detrás del plato: se desliza en cada cambio. */
+  .favorito__fondo {
+    position: absolute;
+    inset: 0 -40vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--f-display);
+    font-size: clamp(4rem, 22vw, 12rem);
+    line-height: 0.9;
+    text-transform: uppercase;
+    text-align: center;
+    white-space: nowrap;
+    color: transparent;
+    -webkit-text-stroke: 1.5px rgb(125 102 68 / 0.38);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .favorito__plato {
+    position: relative;
+    width: min(100%, clamp(190px, 32svh, 420px));
+    display: grid;
+    place-items: center;
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+
+  .favorito__plato :global(.medallon) {
+    width: min(var(--lado), 100%);
+  }
+
+  /* Brillo que sigue al cursor sobre el plato (profundidad). */
+  .favorito__brillo {
+    position: absolute;
+    inset: 9%;
+    border-radius: 50%;
+    pointer-events: none;
+    background: radial-gradient(circle at var(--bx, 30%) var(--by, 25%), rgb(255 255 255 / 0.28), transparent 45%);
+    mix-blend-mode: soft-light;
+    opacity: 0;
+    transition: opacity var(--t-base);
+  }
+
+  .favorito__escena:hover .favorito__brillo {
+    opacity: 1;
+  }
+
+  .favorito__info {
+    display: grid;
+    gap: 8px;
+    justify-items: start;
+  }
+
+  .favorito__indice {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+  }
+
+  .favorito__numero {
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 0.88rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--texto-suave);
+  }
+
+  .favorito__numero span {
+    color: var(--texto);
+  }
+
+  .favorito__nombre {
+    font-size: clamp(1.9rem, 8.4vw, 3.6rem);
+  }
+
+  .favorito__precio,
+  .favorito__precios strong {
+    display: inline-block;
+    font-family: var(--f-display);
+    font-weight: 400;
+    font-size: 1.6rem;
+    line-height: 1;
+    color: var(--texto);
+  }
+
+  .favorito__precios {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .favorito__precios li {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 2px;
+    background: var(--fondo-medio);
+    box-shadow: inset 0 0 0 1px var(--linea);
+  }
+
+  .favorito__precios strong {
+    font-size: 1.2rem;
+  }
+
+  .favorito__desc {
+    max-width: 52ch;
+    color: var(--texto-suave);
+    font-size: 1rem;
+  }
+
+  .favorito__pie {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 16px;
+  }
+
+  .favorito__pie small {
+    font-size: 0.75rem;
+    color: var(--texto-suave);
+  }
+
+  .favorito__enlace {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    font-family: var(--f-label);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 6px;
+    color: var(--texto);
+  }
+
+  .favorito__enlace :global(svg) {
+    width: 18px;
+    height: 18px;
+    transition: transform var(--t-base) var(--ease-buck);
+  }
+
+  .favorito__enlace:hover :global(svg) {
+    transform: translateX(4px);
+  }
+
+  /* Teléfono: las flechas flotan a los lados del plato; los puntos solo en pantallas grandes. */
+  .favoritos__controles {
+    position: absolute;
+    inset: 0 0 auto;
+    height: var(--alto-escena);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    pointer-events: none;
+  }
+
+  .favoritos__controles > * {
+    pointer-events: auto;
+  }
+
+  .favoritos__puntos {
+    display: none !important;
+  }
+
+  .favoritos__flecha {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    flex: none;
+    border-radius: 50%;
+    border: 0;
+    background: var(--acento);
+    color: var(--sobre-acento);
+    box-shadow: 0 0 0 4px var(--fondo);
+    cursor: pointer;
+    transition:
+      transform var(--t-fast) var(--ease-out),
+      box-shadow var(--t-base) var(--ease-out);
+  }
+
+  .favoritos__flecha :global(svg) {
+    width: 22px;
+    height: 22px;
+  }
+
+  @media (hover: hover) {
+    .favoritos__flecha:hover {
+      box-shadow:
+        0 0 0 4px var(--fondo),
+        0 0 0 5px var(--texto);
+    }
+  }
+
+  .favoritos__flecha:active {
+    transform: scale(0.92);
+  }
+
+  .favoritos__puntos {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2px;
+  }
+
+  .favoritos__punto {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+  }
+
+  /* Cada punto es una espuela; la activa gira y se enciende. */
+  .favoritos__punto span {
+    width: 12px;
+    height: 12px;
+    background: var(--c-arena-oscura);
+    clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+    transition:
+      transform 0.5s var(--ease-buck),
+      background-color var(--t-fast);
+  }
+
+  .favoritos__punto[aria-selected='true'] span {
+    background: var(--texto);
+    transform: scale(1.6) rotate(144deg);
+  }
+
+  @media (min-width: 900px) {
+    .favorito {
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+      align-items: center;
+      gap: 40px;
+    }
+
+    .favorito__escena {
+      height: clamp(360px, 62svh, 620px);
+    }
+
+    .favorito__plato {
+      width: min(100%, 440px);
+    }
+
+    .favoritos__controles {
+      position: static;
+      height: auto;
+      margin-top: 18px;
+      justify-content: center;
+      gap: 24px;
+    }
+
+    .favoritos__puntos {
+      display: flex !important;
+    }
+  }
+
+  @media (max-width: 899px) and (max-height: 860px) {
+    .favorito__desc {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  }
+</style>

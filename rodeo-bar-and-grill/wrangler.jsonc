@@ -1,0 +1,14 @@
+// Cloudflare Workers con archivos estáticos (sin código de servidor).
+// Publicar: npm run build && npm run deploy:workers
+// Para Cloudflare Pages no hace falta este archivo: ver README.md.
+{
+  "name": "rodeo-bar-and-grill",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    // /menu y /menu/ abren /menu/index.html
+    "html_handling": "auto-trailing-slash",
+    // Las rutas que no existen muestran dist/404.html con estado 404
+    "not_found_handling": "404-page"
+  }
+}

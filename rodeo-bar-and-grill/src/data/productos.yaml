@@ -1,0 +1,894 @@
+# Productos del menú de The Rodeo Bar And Grill.
+# Fuente: fotos del menú impreso y de la carta de bar (Google Drive → PROYECTOS/RODEO), 2026-10-19.
+# El orden de este archivo es el orden en el menú.
+#
+# Campos:
+#   id          identificador único (minúsculas y guiones)
+#   categoria   id de una categoría de categorias.yaml
+#   numero      número del plato en el menú impreso (opcional)
+#   nombre      nombre tal como aparece en el menú
+#   descripcion texto del menú (opcional)
+#   precio      precio en dólares, solo el número (14.99)
+#   opciones    variantes con su propio precio: - { nombre: ..., precio: ... }
+#               (si una opción no tiene precio conocido, se omite "precio")
+#               ¡Ojo! Si el nombre lleva coma, va entre comillas: { nombre: "Pastor, asada", precio: 9.99 }
+#   carnes      lista "choice of meat" del menú
+#   lista       lista simple (cervezas, sabores…)
+#   etiquetas   favorite (★ Favorite en el menú), new (New!), angus (sello Certified Angus Beef),
+#               weekend (solo fin de semana)
+#   foto        archivo de src/assets/platos/ sin .jpg
+#   revisar     nota interna para confirmar con el cliente (NO se publica)
+# Sin precio ni opciones con precio, el sitio muestra "Ask your server".
+
+# ───────── Appetizers ─────────
+- id: rodeo-nachos
+  categoria: appetizers
+  nombre: Rodeo Nachos
+  descripcion: Beef fajita with cheese dip. Served with guacamole and sour cream.
+  precio: 14.99
+
+- id: nachos-regular
+  categoria: appetizers
+  nombre: Nachos Regular
+  descripcion: Bean and cheese, served with guacamole & sour cream.
+  precio: 8.99
+
+- id: supreme-nachos
+  categoria: appetizers
+  nombre: Supreme Nachos
+  descripcion: Beans, cheese and meat, served with guac and sour cream.
+  opciones:
+    - { nombre: Shredded chicken or ground beef, precio: 11.99 }
+    - { nombre: Asada or fajitas, precio: 13.99 }
+
+- id: queso-flameado
+  categoria: appetizers
+  nombre: Queso Flameado
+  descripcion: Monterrey Jack cheese melted, topped with Mexican chorizo. With (4) flour or corn tortillas.
+  precio: 10.99
+
+- id: ceviche-mixto
+  categoria: appetizers
+  nombre: Ceviche Mixto
+  descripcion: Fish & shrimp traditional Mexican ceviche.
+  precio: 12.99
+
+- id: chile-con-queso
+  categoria: appetizers
+  nombre: Chile con Queso
+  descripcion: A rich, warm blend of melting cheeses mixed with diced jalapeños and tomatoes for an authentic, savory appetizer.
+  precio: 6.99
+
+- id: chicken-wings
+  categoria: appetizers
+  nombre: Chicken Wings
+  descripcion: Buffalo sauce, mango habanero or BBQ. 12 pieces.
+  precio: 14.99
+  foto: chicken-wings
+
+- id: chicharron-with-guacamole
+  categoria: appetizers
+  nombre: Chicharrón with Guacamole
+  descripcion: Large and perfectly puffed pork rinds, served with our fresh, house-made guacamole for dipping.
+  precio: 15.99
+
+- id: rodeo-botana
+  categoria: appetizers
+  nombre: Rodeo Botana
+  descripcion: 4 mini cheese quesadillas, 4 bean and cheese nachos and 4 chicken mini flautas, with guac & sour cream.
+  opciones:
+    - { nombre: Rodeo Botana, precio: 14.99 }
+    - { nombre: Add meat on quesadillas, precio: 15.99 }
+  etiquetas: [favorite]
+  foto: rodeo-botana
+
+- id: smoked-baby-back-ribs
+  categoria: appetizers
+  nombre: Smoked Baby Back Ribs
+  descripcion: Comes with fries.
+  opciones:
+    - { nombre: Half rack, precio: 15.99 }
+    - { nombre: Full rack, precio: 29.99 }
+  foto: baby-back-ribs
+
+- id: papas-locas
+  categoria: appetizers
+  nombre: Papas Locas
+  descripcion: French fries with our homemade cheese dip and carne asada.
+  precio: 10.99
+  foto: papas-locas
+
+# ───────── Lunch & Dinner Plates ─────────
+- id: carne-asada-plate
+  categoria: plates
+  numero: "1"
+  nombre: Carne Asada Plate
+  descripcion: Grilled asada meat. Served with rice, charro beans, salad, guacamole & pico de gallo.
+  precio: 16.99
+
+- id: asada-quesadilla-plate
+  categoria: plates
+  numero: "17"
+  nombre: Asada Quesadilla Plate
+  descripcion: Asada quesadilla served with rice, beans, salad and guacamole.
+  opciones:
+    - { nombre: Asada, precio: 12.99 }
+    - { nombre: Beef or chicken fajita, precio: 15.99 }
+
+- id: carne-guisada-plate
+  categoria: plates
+  numero: "2"
+  nombre: Carne Guisada Plate
+  descripcion: Tender chunks of beef simmered slowly in a rich, savory homemade gravy. A classic comfort dish served with rice, beans, and salad.
+  precio: 13.99
+
+- id: el-tapatio-plate
+  categoria: plates
+  numero: "21"
+  nombre: El Tapatio Plate
+  descripcion: Chicken fajita with 2 cheese enchiladas. Served with rice, beans & guacamole.
+  precio: 13.99
+  foto: tapatio-plate
+
+- id: jalisciense-plate
+  categoria: plates
+  numero: "11"
+  nombre: Jalisciense Plate
+  descripcion: Grilled asada meat topped with grilled onions, served with rice, beans topped with fresco cheese, guacamole & salad.
+  precio: 16.99
+
+- id: fajitas-plate
+  categoria: plates
+  numero: "13"
+  nombre: Fajitas Plate
+  descripcion: Choice of certified, hand-cut Angus beef or tender chicken breast fajitas, perfectly marinated and served with rice, beans, salad and guacamole.
+  opciones:
+    - { nombre: Beef fajita, precio: 16.99 }
+    - { nombre: Chicken, precio: 15.99 }
+  etiquetas: [angus]
+
+- id: flautas-plate
+  categoria: plates
+  numero: "15"
+  nombre: Flautas Plate
+  descripcion: 3 chicken-stuffed flautas. Served with rice, beans, salad, guacamole & sour cream.
+  precio: 11.99
+
+- id: tacos-zacatecanos
+  categoria: plates
+  numero: "14"
+  nombre: Tacos Zacatecanos
+  descripcion: (4) Potato tacos, served with cebolla curtida, repollo, rice and beans.
+  opciones:
+    - { nombre: Potato tacos, precio: 12.99 }
+    - { nombre: Add meat, precio: 15.99 }
+  foto: tacos-zacatecanos
+
+- id: carne-al-pastor-plate
+  categoria: plates
+  numero: "16"
+  nombre: Carne al Pastor Plate
+  descripcion: Pork meat marinated in a sauce and spices. Served with rice, guacamole, salad & pico de gallo.
+  revisar: El reflejo de la foto tapa el precio y parte de la descripción ("marinated in a de… sauce", "Served with Ri…"). Falta el precio.
+
+- id: carnitas-plate
+  categoria: plates
+  numero: "46"
+  nombre: Carnitas Plate
+  descripcion: Slow-simmered pork confit, served with traditional rice, beans and tortillas.
+  precio: 13.99
+  revisar: Una palabra tapada por reflejo ("perfectly c… pork confit"); se omitió.
+
+- id: rafas-plate
+  categoria: plates
+  numero: "44"
+  nombre: Rafa's Plate
+  descripcion: Beef fajita with shrimp topped with our ranchero sauce and covered with white cheese. Served with rice, beans, salad & guacamole.
+  precio: 18.99
+  foto: rafas-plate
+
+# ───────── Steaks ─────────
+- id: steak-ranchero-plate
+  categoria: steaks
+  numero: "6"
+  nombre: Steak Ranchero Plate
+  descripcion: 10 oz. ribeye steak with ranchero sauce, served with rice, beans, salad & guacamole.
+  precio: 18.99
+  etiquetas: [angus]
+
+- id: steak-mexicano
+  categoria: steaks
+  numero: "9"
+  nombre: Steak Mexicano
+  descripcion: Topped with onions and bell peppers, served with rice & beans and tortillas.
+  precio: 18.99
+  etiquetas: [angus]
+
+- id: steak-and-shrimp
+  categoria: steaks
+  numero: "28"
+  nombre: Steak and Shrimp
+  descripcion: 5 shrimp and a rib-eye steak, served with steamed vegetables and baked potato.
+  precio: 24.99
+  etiquetas: [angus]
+  foto: steak-and-shrimp
+
+# ───────── Parrilladas ─────────
+- id: alambre-plate
+  categoria: parrilladas
+  nombre: Alambre Plate
+  descripcion: Asada meat, country sausage, bacon, bell pepper, onion. Topped with Monterrey Jack cheese. Served with rice, charro beans and guacamole.
+  precio: 19.99
+  etiquetas: [angus]
+
+- id: el-ranchero-plate
+  categoria: parrilladas
+  nombre: El Ranchero Plate
+  descripcion: Grilled asada meat with Monterrey white cheese on top, with cambray onion and 2 jalapeños wrapped with bacon. Served with charro beans, pico de gallo, rice and beans.
+  precio: 20.99
+
+- id: el-alamo-steak-plate
+  categoria: parrilladas
+  nombre: El Alamo Steak Plate
+  descripcion: 12 oz. ribeye steak, 5 shrimps, country sausage, asadero cheese. Served with rice, charro beans, guacamole or baked potato.
+  precio: 28.99
+  etiquetas: [angus]
+  foto: el-alamo-steak-plate
+
+- id: rodeo-parrillada
+  categoria: parrilladas
+  numero: P1
+  nombre: Rodeo Parrillada
+  descripcion: Our ultimate parrillada with sizzling premium Angus beef and chicken, country sausage, chorizo, shrimp, asadero cheese, served with warm tortillas, Spanish rice, rich charro beans, and house-made guacamole, or baked potato.
+  opciones:
+    - { nombre: For 1, precio: 20.99 }
+    - { nombre: For 2, precio: 38.99 }
+  etiquetas: [angus]
+
+- id: parrillada-fajitas
+  categoria: parrilladas
+  numero: P2
+  nombre: Parrillada “Fajitas”
+  descripcion: Choice of beef or chicken fajitas, served with rice, charro beans and guacamole.
+  opciones:
+    - { nombre: For 1, precio: 17.99 }
+    - { nombre: For 2, precio: 32.99 }
+  etiquetas: [angus]
+
+- id: the-texan-parrillada
+  categoria: parrilladas
+  numero: P3
+  nombre: “The Texan” Parrillada
+  descripcion: A sizzling combination of slow-smoked pork ribs, certified premium Angus beef fajita, juicy chicken fajita and country sausage. Served with charro beans, rice, salad and guacamole.
+  opciones:
+    - { nombre: For 1, precio: 20.99 }
+    - { nombre: For 2, precio: 38.99 }
+  etiquetas: [new, angus]
+
+# ───────── Molcajetes ─────────
+- id: molcajete-plate
+  categoria: molcajetes
+  numero: M1
+  nombre: Molcajete Plate
+  descripcion: Beef, chicken fajita, country sausage, cheese, served with rice, charro beans, guacamole and salad.
+  precio: 17.99
+
+- id: molcajete-mar-y-tierra
+  categoria: molcajetes
+  numero: M2
+  nombre: Molcajete Mar y Tierra
+  descripcion: Beef arrachera, grilled fish fillet, shrimp, chorizo, asadero cheese and chicken breast, served with rice, charro beans, guacamole and salad.
+  precio: 26.99
+
+- id: pound-of-fajitas
+  categoria: molcajetes
+  nombre: Pound of Fajitas
+  descripcion: One full pound of sizzling, expertly marinated certified Angus steak served with warm tortillas and traditional sides.
+  precio: 29.99
+  etiquetas: [angus]
+
+- id: pound-of-barbacoa
+  categoria: molcajetes
+  nombre: Pound of Barbacoa
+  precio: 15.99
+  foto: pound-of-barbacoa
+
+# ───────── Chicken ─────────
+- id: pollo-feliz
+  categoria: chicken
+  numero: "18"
+  nombre: Pollo Feliz
+  descripcion: Grilled chicken breast with onions and peppers, melted with cheese, served with steamed vegetables and rice.
+  precio: 16.99
+  foto: pollo-feliz
+  revisar: Texto pequeño en la foto; descripción y precio leídos con baja resolución.
+
+- id: pancho-villas-chicken
+  categoria: chicken
+  numero: "24"
+  nombre: Pancho Villa's Chicken
+  descripcion: Grilled chicken breast topped with cheese dip and Mexican-style chorizo, served with steamed vegetables and rice.
+  precio: 17.99
+  revisar: Texto pequeño en la foto; descripción y precio leídos con baja resolución.
+
+- id: pechuga-a-la-crema
+  categoria: chicken
+  numero: "27"
+  nombre: Pechuga a la Crema
+  descripcion: Chipotle, cilantro, poblano. Rice, beans, salad & guacamole.
+  precio: 16.99
+  revisar: Texto pequeño en la foto; la descripción se lee incompleta.
+
+# ───────── Tex-Mex Plates ─────────
+- id: tampiquena-plate
+  categoria: texmex
+  numero: "8"
+  nombre: Tampiqueña Plate
+  precio: 16.99
+  etiquetas: [favorite, angus]
+  foto: tampiquena-plate
+  revisar: Descripción ilegible en la foto; precio leído como $16.99 con baja resolución.
+
+- id: chalupa-plate
+  categoria: texmex
+  numero: "4"
+  nombre: Chalupa Plate
+  revisar: Descripción y precio ilegibles en la foto (reflejo y baja resolución).
+
+- id: crispy-taco-plate
+  categoria: texmex
+  numero: "26"
+  nombre: Crispy Taco Plate
+  descripcion: Beef or chicken. Served with rice and beans.
+  precio: 10.99
+  revisar: Texto pequeño; se lee "… Beef or Chicken served with Rice, Beans … $10.99". Confirmar descripción completa.
+
+- id: puffy-tacos-plate
+  categoria: texmex
+  numero: "25"
+  nombre: Puffy Tacos Plate
+  revisar: Descripción y precios ilegibles en la foto (reflejo y baja resolución).
+
+- id: gordita-plate
+  categoria: texmex
+  numero: "12"
+  nombre: Gordita Plate
+  descripcion: 2 gorditas with your choice of meat. Served with rice, beans, guacamole salad & pico de gallo.
+  opciones:
+    - { nombre: Beef or chicken, precio: 12.99 }
+    - { nombre: Fajita, precio: 13.99 }
+
+- id: texas-plate
+  categoria: texmex
+  numero: "10"
+  nombre: Texas Plate
+  descripcion: 2 cheese enchiladas with beef tips, served with rice, beans, and guacamole.
+  precio: 13.99
+
+- id: jalisco-burrito-plate
+  categoria: texmex
+  numero: "30"
+  nombre: Jalisco Burrito Plate
+  descripcion: Your choice of any meat in a large flour tortilla. Topped with gravy & cheddar cheese. Served with rice, beans, guacamole & sour cream.
+  opciones:
+    - { nombre: Choice of meat, precio: 11.99 }
+    - { nombre: Fajita, precio: 12.99 }
+  revisar: El $11.99 aparece impreso encima de otro texto; confirmar.
+
+- id: chimichanga
+  categoria: texmex
+  numero: "31"
+  nombre: Chimichanga
+  descripcion: Large flour tortilla fried with chile con queso on top, your choice of meat, served with rice, beans, salad and guacamole.
+  opciones:
+    - { nombre: Choice of meat, precio: 11.99 }
+    - { nombre: Beef or chicken fajita, precio: 12.99 }
+
+- id: chile-relleno-plate
+  categoria: texmex
+  numero: "19"
+  nombre: Chile Relleno Plate
+  descripcion: Delicious poblano pepper stuffed with Oaxaca cheese or choice of picadillo or chicken, lightly battered and fried, then smothered in our savory ranchero sauce. Rice, beans and salad.
+  precio: 11.99
+
+# ───────── Enchiladas ─────────
+- id: mexican-plate
+  categoria: enchiladas
+  numero: "3"
+  nombre: Mexican Plate
+  descripcion: 2 cheese enchiladas, 1 beef crispy taco. Served with rice, beans & salad.
+  precio: 10.99
+  revisar: Texto pequeño en la foto; leído con baja resolución.
+
+- id: bryans-plate
+  categoria: enchiladas
+  numero: "22"
+  nombre: Bryan's Plate
+  descripcion: 2 enchiladas, beef fajita, rice, beans & guacamole.
+  precio: 15.99
+  etiquetas: [favorite, angus]
+  revisar: Texto pequeño en la foto; leído con baja resolución.
+
+- id: enchilada-plate
+  categoria: enchiladas
+  numero: "5"
+  nombre: Enchilada Plate
+  descripcion: 3 enchiladas served with rice and beans.
+  opciones:
+    - { nombre: Cheese, precio: 10.99 }
+    - { nombre: Beef or chicken, precio: 11.99 }
+  etiquetas: [favorite]
+  revisar: Texto pequeño en la foto; leído con baja resolución.
+
+- id: enchiladas-verdes-plate
+  categoria: enchiladas
+  numero: "23"
+  nombre: Enchiladas Verdes Plate
+  descripcion: 3 chicken or beef enchiladas, covered with salsa verde. Served with rice, beans, lettuce & tomatoes.
+  precio: 11.99
+  foto: enchiladas-verdes
+
+- id: enchiladas-mexicanas
+  categoria: enchiladas
+  numero: "29"
+  nombre: Enchiladas Mexicanas
+  descripcion: 3 beef or chicken enchiladas, covered Mexican style. Served with rice, beans, lettuce & tomatoes.
+  precio: 11.99
+
+- id: enchiladas-a-la-crema
+  categoria: enchiladas
+  numero: "33"
+  nombre: Enchiladas a la Crema
+  descripcion: 3 enchiladas topped with our authentic creamy chipotle sauce. Served with rice, beans & salad.
+  opciones:
+    - { nombre: Beef or chicken, precio: 12.99 }
+    - { nombre: Shrimp, precio: 15.99 }
+  foto: enchiladas-a-la-crema
+
+# ───────── Seafood ─────────
+- id: shrimp-cocktail
+  categoria: seafood
+  numero: "37"
+  nombre: Shrimp Cocktail
+  precio: 14.99
+  foto: shrimp-cocktail
+
+- id: filete-de-pescado-a-la-crema
+  categoria: seafood
+  numero: "38"
+  nombre: Filete de Pescado a la Crema
+  descripcion: Grilled fish topped with your choice of cream sauce (chipotle, cilantro or poblano). Served with rice, fries & salad.
+  precio: 14.99
+
+- id: fried-tilapia
+  categoria: seafood
+  numero: "40"
+  nombre: Fried Tilapia (Mojarra Frita)
+  descripcion: Served with rice, fries, salad & avocado.
+  precio: 14.99
+
+- id: shrimp-quesadillas
+  categoria: seafood
+  numero: "41"
+  nombre: Shrimp Quesadillas
+  descripcion: 3 shrimp quesadillas served with rice, fries & salad.
+  precio: 15.99
+
+- id: baja-fish-tacos
+  categoria: seafood
+  numero: "42"
+  nombre: Baja Fish Tacos
+  descripcion: Fish lightly battered and fried, served with rice & french fries.
+  precio: 15.99
+
+- id: shrimp-a-la-diabla
+  categoria: seafood
+  numero: "43"
+  nombre: Shrimp a la Diabla
+  descripcion: Sauté shrimp in diabla sauce and spices. Served with rice, fries, salad & avocado.
+  precio: 16.99
+
+- id: breaded-seafood-and-shrimp
+  categoria: seafood
+  numero: "47"
+  nombre: Breaded Seafood and Shrimp
+  descripcion: 2 fish fillets, 4 shrimp, fries and salad.
+  precio: 15.99
+
+- id: mango-grilled-fish-fillet
+  categoria: seafood
+  numero: "45"
+  nombre: Mango Grilled Fish Fillet
+  descripcion: 2 grilled fish fillets covered with mango habanero sauce, served with rice, salad, avocado and calabacita squash.
+  precio: 15.99
+  etiquetas: [favorite]
+
+- id: caldo-de-camaron
+  categoria: seafood
+  nombre: Caldo de Camarón
+  precio: 15.99
+
+- id: fiesta-cancun
+  categoria: seafood
+  nombre: Fiesta Cancún
+  descripcion: One green chicken enchilada with four shrimp, one corn tortilla quesadilla with rice, beans.
+  precio: 16.99
+  foto: fiesta-cancun
+
+# ───────── Soups & Salads ─────────
+- id: pozole
+  categoria: soups-salads
+  nombre: Pozole
+  descripcion: Weekend only.
+  opciones:
+    - { nombre: Small, precio: 9.99 }
+    - { nombre: Large, precio: 12.99 }
+  etiquetas: [weekend]
+
+- id: menudo
+  categoria: soups-salads
+  nombre: Menudo
+  opciones:
+    - { nombre: Small, precio: 9.99 }
+    - { nombre: Large, precio: 12.99 }
+  foto: menudo
+
+- id: caldo-de-res
+  categoria: soups-salads
+  nombre: Caldo de Res
+  descripcion: With tortillas.
+  precio: 11.99
+
+- id: caldo-de-pollo
+  categoria: soups-salads
+  nombre: Caldo de Pollo
+  descripcion: With tortillas.
+  precio: 11.99
+  foto: caldo-de-pollo
+
+- id: tortilla-soup
+  categoria: soups-salads
+  nombre: Tortilla Soup
+  precio: 12.99
+
+- id: bryans-salad
+  categoria: soups-salads
+  nombre: Bryan's Salad
+  descripcion: "Mix of greens, tomatoes, avocado, 3 shrimps, and your choice of meat: chicken breast or asada."
+  precio: 15.99
+  foto: bryans-salad
+
+- id: fajita-salad
+  categoria: soups-salads
+  nombre: Fajita Salad
+  descripcion: Mix of greens, tomato & avocado.
+  precio: 15.99
+
+- id: taco-salad
+  categoria: soups-salads
+  nombre: Taco Salad
+  descripcion: Tortilla bowl with your choice of meat, lettuce, tomato, cheese, guacamole and sour cream.
+  precio: 13.99
+
+# ───────── Burritos, Tortas & More ─────────
+- id: regular-burrito
+  categoria: burritos
+  nombre: Regular Burrito
+  descripcion: Large flour tortilla with beans, cheese, lettuce and tomatoes.
+  opciones:
+    - { nombre: "Shredded chicken, ground beef or choice of meat", precio: 8.99 }
+    - { nombre: Asada or fajita, precio: 9.99 }
+  carnes: [Carne Guisada / Beef & Gravy, Pollo / Shredded Chicken, Picadillo / Ground Beef, Al Pastor / Pork & Red Sauce, Barbacoa / Barbeque]
+  revisar: Confirmar que $8.99 aplica a todas las carnes de la lista "Choice of".
+
+- id: cali-burrito
+  categoria: burritos
+  nombre: Cali Burrito
+  descripcion: Beans, rice, onions, cilantro, cheese, sour cream, choice of meat.
+  precio: 9.99
+
+- id: burrito-suizo
+  categoria: burritos
+  nombre: Burrito Suizo
+  descripcion: Large flour tortilla topped with our delicious green sauce.
+  precio: 9.99
+
+- id: jalisco-burrito
+  categoria: burritos
+  nombre: Jalisco Burrito
+  descripcion: Large flour tortilla, topped with gravy and cheese.
+  opciones:
+    - { nombre: Shredded chicken or ground beef, precio: 9.99 }
+    - { nombre: Asada or fajita, precio: 10.99 }
+  foto: jalisco-burrito
+  revisar: El precio de "Shredded chicken or ground beef" se lee como $9.99 con dificultad.
+
+- id: tortas
+  categoria: burritos
+  nombre: Tortas
+  descripcion: With lettuce, tomato, avocado & sour cream. Your choice of meat.
+  precio: 8.99
+
+- id: chalupas
+  categoria: burritos
+  nombre: Chalupas
+  descripcion: Crispy corn tortilla with lettuce, tomato, avocado & sour cream.
+  opciones:
+    - { nombre: Bean and cheese, precio: 3.99 }
+    - { nombre: Choice of meat, precio: 4.29 }
+    - { nombre: Asada or fajita, precio: 5.99 }
+  carnes: [Carne Guisada / Beef & Gravy, Pollo / Shredded Chicken, Picadillo / Ground Beef, Al Pastor / Pork & Red Sauce, Barbacoa / Barbeque]
+  revisar: La lista "Choice of $4.29" empieza con "Asada Meat", pero Asada también aparece a $5.99; se omitió de la lista hasta confirmar.
+
+- id: gorditas
+  categoria: burritos
+  nombre: Gorditas
+  descripcion: Stuffed homemade corn tortillas with pico de gallo and refried beans.
+  opciones:
+    - { nombre: Your choice of meat, precio: 6.99 }
+    - { nombre: Asada or fajitas, precio: 7.99 }
+  carnes: [Carne Guisada / Beef & Gravy, Pollo / Shredded Chicken, Picadillo / Ground Beef, Al Pastor / Pork & Red Sauce, Barbacoa / Barbeque]
+
+- id: hamburger
+  categoria: burritos
+  nombre: Hamburger
+  descripcion: With fries.
+  precio: 8.99
+  foto: hamburger
+
+- id: chicken-sandwich
+  categoria: burritos
+  nombre: Chicken Sandwich
+  precio: 8.99
+  foto: chicken-sandwich
+
+# ───────── Tacos ─────────
+- id: tacos-regulares
+  categoria: tacos
+  nombre: Tacos Regulares
+  opciones:
+    - { nombre: Carne Asada, precio: 3.99 }
+    - { nombre: Carne Guisada, precio: 3.99 }
+    - { nombre: Chicken, precio: 3.79 }
+    - { nombre: Avocado, precio: 3.99 }
+    - { nombre: Pastor, precio: 3.99 }
+    - { nombre: Barbacoa, precio: 3.99 }
+    - { nombre: Picadillo, precio: 3.99 }
+    - { nombre: Beef Fajita, precio: 5.29 }
+    - { nombre: Chicken Fajita, precio: 4.99 }
+    - { nombre: Tripas, precio: 4.99 }
+
+- id: mini-tacos
+  categoria: tacos
+  nombre: Mini Tacos
+  descripcion: Pastor, asada or barbacoa. Served with charro beans, cilantro & onion.
+  opciones:
+    - { nombre: "Pastor, asada or barbacoa", precio: 10.99 }
+    - { nombre: Tripas, precio: 11.99 }
+  foto: mini-tacos
+  revisar: Texto pequeño; no se lee cuántos mini tacos incluye (aparece un número entre paréntesis).
+
+- id: tacos-costra
+  categoria: tacos
+  nombre: Tacos Costra
+  descripcion: A trio of tacos featuring a perfectly toasted cheese crust, juicy grilled fajita, and smooth avocado slices. Served with onions, cilantro, and charro beans.
+  precio: 14.99
+
+- id: taco-norteno
+  categoria: tacos
+  nombre: Taco Norteño
+  descripcion: Chicken fajita with cheese and avocado.
+  revisar: El reflejo tapa parte de la descripción y el precio. Falta el precio.
+
+- id: quesabirrias
+  categoria: tacos
+  nombre: Quesabirrias
+  descripcion: 3 birria with cheese tacos (quesabirrias) with consomé, cilantro and onion.
+  precio: 12.99
+  foto: quesabirrias
+
+# ───────── Child Plates ─────────
+- id: kids-taco-de-carne-guisada
+  categoria: kids
+  nombre: 1 Taco de Carne Guisada
+  descripcion: Served with rice and beans.
+  precio: 7.99
+
+- id: kids-taco-de-asada
+  categoria: kids
+  nombre: 1 Taco de Asada
+  descripcion: Served with rice and beans.
+  precio: 7.99
+
+- id: kids-enchilada
+  categoria: kids
+  nombre: Enchilada
+  descripcion: Your choice of cheese, beef or chicken, served with rice and beans.
+  precio: 7.99
+
+- id: kids-crispy-taco
+  categoria: kids
+  nombre: Crispy Taco
+  descripcion: Beef or chicken, served with rice and beans.
+  precio: 6.99
+
+- id: kids-cheese-quesadilla
+  categoria: kids
+  nombre: Cheese Quesadilla
+  descripcion: Served with rice and beans.
+  precio: 6.99
+
+- id: kids-chicken-nuggets
+  categoria: kids
+  nombre: Chicken Nuggets
+  descripcion: Served with fries.
+  precio: 7.99
+
+# ───────── Margaritas (carta de bar, sin precios en la foto) ─────────
+- id: house-margarita
+  categoria: margaritas
+  nombre: House Margarita
+  descripcion: Frozen or on-the-rocks.
+
+- id: strawberry-margarita
+  categoria: margaritas
+  nombre: Strawberry Margarita
+  descripcion: Frozen or on-the-rocks.
+
+- id: acapulco-margarita
+  categoria: margaritas
+  nombre: Acapulco Margarita
+  descripcion: Frozen or on-the-rocks.
+
+- id: mango-margarita
+  categoria: margaritas
+  nombre: Mango Margarita
+  descripcion: Frozen mango margarita with chamoy & tajín.
+
+- id: two-amigos-margarita
+  categoria: margaritas
+  nombre: Two Amigos Margarita
+  descripcion: Strawberry & mango frozen margarita.
+
+- id: jumbo-margarita
+  categoria: margaritas
+  nombre: Jumbo Margarita
+  descripcion: Choice of margarita, frozen or on-the-rocks.
+
+- id: la-italiana-margarita
+  categoria: margaritas
+  nombre: La Italiana Margarita
+  descripcion: Margarita on the rocks or frozen with Italian liqueur (Disaronno Originale).
+
+- id: picafresa-margarita
+  categoria: margaritas
+  nombre: Picafresa Margarita
+  descripcion: A perfect blend of sweet flavors with a touch of heat.
+  etiquetas: [new]
+
+- id: popping-boba-margaritas
+  categoria: margaritas
+  nombre: Popping Boba Margaritas
+  descripcion: Bursting flavor, unforgettable experience. 14 oz.
+  lista: [Lime, Strawberry, Mango]
+  etiquetas: [new]
+
+- id: patroncita
+  categoria: margaritas
+  nombre: Patroncita
+  descripcion: With an extra shot of Patrón Reposado.
+  revisar: Esta parte de la carta de bar aparece cortada en la foto.
+
+# ───────── Specialty Cocktails ─────────
+- id: the-rodeo-pina-colada
+  categoria: cocktails
+  nombre: The Rodeo Piña Colada
+  descripcion: Our famous piña colada made with fresh pineapple.
+
+- id: pina-colada
+  categoria: cocktails
+  nombre: Piña Colada
+  descripcion: A tropical classic with rum, coconut cream & pineapple.
+
+- id: mojito
+  categoria: cocktails
+  nombre: Mojito (Original) or Pineapple
+  descripcion: A refreshing mix of mint, lime, and your choice of classic mojito or pineapple twist.
+
+- id: paloma
+  categoria: cocktails
+  nombre: Paloma
+  descripcion: Tequila, lime juice & grapefruit soda.
+
+- id: micheladas
+  categoria: cocktails
+  nombre: Micheladas
+  descripcion: With your favorite beer.
+
+- id: cubetazos
+  categoria: cocktails
+  nombre: Cubetazos
+  descripcion: 5 beers.
+  revisar: Texto borroso ("5 Beers, Domestic or …"); confirmar descripción.
+
+- id: orange-mimosa
+  categoria: cocktails
+  nombre: Orange Mimosa
+  descripcion: Made with fresh orange juice.
+
+# ───────── Beer ─────────
+- id: domestic-beer
+  categoria: beer
+  nombre: Domestic
+  lista: [Bud Light, Miller Lite, Coors Light, Heineken, Budweiser, Michelob Ultra, Corona Extra, Modelo Especial, Shiner Bock]
+
+- id: imported-beer
+  categoria: beer
+  nombre: Imported
+  lista: [Tecate Roja, Tecate Light, Corona, Corona Premier, Pacifico, Dos Equis (XX), Modelo Negra, Estrella Jalisco, Victoria]
+
+# ───────── Spirits ─────────
+- id: vodka
+  categoria: spirits
+  nombre: Vodka
+  lista: [Tito's, Grey Goose, Ketel One]
+  revisar: La foto de la carta de bar se corta en esta lista; puede haber más marcas y otros licores.
+
+# ───────── Soft Drinks ─────────
+- id: fountain-drinks
+  categoria: soft-drinks
+  nombre: Fountain Drinks
+  lista: [Pepsi, Pepsi Zero, Starr, Dr. Pepper, Tropicana Punch, Crush Orange, Bry Red, Manzanita Sol]
+  opciones:
+    - { nombre: Small, precio: 2.99 }
+    - { nombre: Large, precio: 3.99 }
+  revisar: '"Starr" y "Bry Red" se copiaron tal como están impresos; ¿son Starry y Big Red?'
+
+- id: can-soda
+  categoria: soft-drinks
+  nombre: Can Soda
+  precio: 2.99
+
+- id: coffee
+  categoria: soft-drinks
+  nombre: Coffee
+  precio: 2.99
+
+- id: cafe-de-olla
+  categoria: soft-drinks
+  nombre: Café de Olla
+  precio: 4.99
+
+- id: milk
+  categoria: soft-drinks
+  nombre: Milk
+  precio: 3.50
+
+- id: hot-chocolate
+  categoria: soft-drinks
+  nombre: Hot Chocolate
+  precio: 3.99
+
+- id: mexican-coke
+  categoria: soft-drinks
+  nombre: Mexican Coke
+  precio: 4.25
+
+- id: jarritos
+  categoria: soft-drinks
+  nombre: Jarritos
+  precio: 3.50
+
+- id: aguas-frescas
+  categoria: soft-drinks
+  nombre: Aguas Frescas
+  opciones:
+    - { nombre: Small, precio: 2.50 }
+    - { nombre: Large, precio: 3.99 }
+
+- id: te
+  categoria: soft-drinks
+  nombre: Té
+  opciones:
+    - { nombre: Small, precio: 2.50 }
+    - { nombre: Large, precio: 3.99 }

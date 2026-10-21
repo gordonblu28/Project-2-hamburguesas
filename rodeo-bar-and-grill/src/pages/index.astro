@@ -1,0 +1,978 @@
+---
+import Base from '../layouts/Base.astro';
+import Letras from '../components/Letras.astro';
+import Medallon from '../components/Medallon.astro';
+import Silueta from '../components/Silueta.astro';
+import Arco from '../components/Arco.astro';
+import Icono from '../components/Icono.astro';
+import { NEGOCIO, DIRECCION_LINEA, TEMPORADA, DESTACADOS, PORTADA } from '../lib/datos';
+import { productos, categorias, foto, ladoMaximo, precioResumen, rutaProducto } from '../lib/menu';
+
+// Platos del lazo: destacados con foto de resolución suficiente para el tamaño del inicio.
+const [todos, cats] = await Promise.all([productos(), categorias()]);
+const platos = DESTACADOS.map((id) => todos.find((p) => p.id === id))
+  .filter((p) => p !== undefined)
+  .map((p) => ({ p, img: foto(p.data.foto) }))
+  .filter((x): x is { p: (typeof todos)[number]; img: NonNullable<ReturnType<typeof foto>> } => !!x.img && ladoMaximo(x.img) >= 150);
+const [primero, ...resto] = platos;
+
+// Galería "House Plates" (src/data/portada.yaml).
+const galeria = PORTADA.galeria.map((id) => {
+  const p = todos.find((x) => x.id === id);
+  if (!p) throw new Error(`src/data/portada.yaml: no existe el producto "${id}" en productos.yaml.`);
+  const img = foto(p.data.foto);
+  if (!img) throw new Error(`src/data/portada.yaml: "${id}" no tiene foto.`);
+  return { p, img, cat: cats.find((c) => c.id === p.data.categoria.id)! };
+});
+
+// Cinta: los nombres reales de las categorías del menú.
+const cinta = cats.map((c) => c.data.corto);
+
+const sitio = Astro.site?.href.replace(/\/$/, '') ?? '';
+const datos = {
+  '@context': 'https://schema.org',
+  '@type': 'Restaurant',
+  name: NEGOCIO.nombre,
+  description: NEGOCIO.lema,
+  servesCuisine: ['Mexican', 'Tex-Mex'],
+  telephone: NEGOCIO.telefono.enlace,
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: NEGOCIO.direccion.calle,
+    addressLocality: NEGOCIO.direccion.ciudad,
+    addressRegion: NEGOCIO.direccion.estado,
+    postalCode: NEGOCIO.direccion.cp,
+    addressCountry: NEGOCIO.direccion.pais,
+  },
+  url: `${sitio}/`,
+  hasMenu: `${sitio}/menu/`,
+  image: `${sitio}/og-image.jpg`,
+  sameAs: [NEGOCIO.instagram.url],
+};
+---
+
+<Base
+  titulo={`${NEGOCIO.nombre} · Mexican Restaurant in Leon Valley, TX`}
+  descripcion={`${NEGOCIO.lema} Tex-Mex plates, parrilladas, seafood and margaritas at ${DIRECCION_LINEA}. Call ${NEGOCIO.telefono.visible}.`}
+  actual="inicio"
+  datosEstructurados={datos}
+  clase="pagina-inicio"
+>
+  <section class="hero wrap" aria-labelledby="hero-titulo">
+    <div class="hero__texto">
+      <p class="kicker kicker--filete hero__kicker" data-entra style="--i:0">Bar &amp; Grill · Mexican Restaurant</p>
+      <h1 id="hero-titulo" class="hero__titulo">
+        <span class="hero__the serif" data-entra style="--i:1">The</span>
+        <Letras texto="Rodeo" class="display poster hero__rodeo" />
+        <span class="hero__placa" data-entra style="--i:2">Bar and Grill</span>
+      </h1>
+      <p class="hero__lema" data-entra style="--i:5">
+        {NEGOCIO.lema}
+        <span>{NEGOCIO.direccion.calle} · {NEGOCIO.direccion.ciudad}, {NEGOCIO.direccion.estado}</span>
+      </p>
+      <div class="hero__acciones" data-entra style="--i:3">
+        <a class="btn" href="/menu/" data-astro-prefetch>Explore the menu <Icono nombre="flecha" /></a>
+        <a class="btn btn--ghost" href="/visit/" data-astro-prefetch><Icono nombre="pin" /> Find us</a>
+      </div>
+      {
+        TEMPORADA.visible && (
+          <a class="hero__temporada" href={TEMPORADA.ruta} data-entra data-temporada-aviso style="--i:4">
+            <span class="hero__temporada-luna" aria-hidden="true">
+              <Icono nombre="luna" />
+            </span>
+            <span class="hero__temporada-texto">
+              <strong>
+                {TEMPORADA.nombre_corto} <em class="serif">Special</em>
+              </strong>
+              <span data-cuenta-corta>{TEMPORADA.vigenteAlCompilar ? `Until ${TEMPORADA.finTexto}` : TEMPORADA.mensaje_final}</span>
+            </span>
+            <Icono nombre="flecha" />
+          </a>
+        )
+      }
+    </div>
+
+    {
+      primero && (
+        <div class="hero__escena" data-escena role="group" aria-roledescription="carousel" aria-label="House favorites">
+          <div class="hero__sol" data-sol aria-hidden="true" />
+
+          <div class="hero__medallon" data-medallon>
+            <Medallon
+              img={primero.img}
+              alt={primero.p.data.nombre}
+              lado={240}
+              prioridad
+              alternas={resto.map((x) => ({ img: x.img, alt: x.p.data.nombre }))}
+            />
+            <button class="hero__siguiente" type="button" data-siguiente aria-label="Show the next dish">
+              <Icono nombre="flecha" />
+            </button>
+          </div>
+
+          <div class="hero__jinete" data-jinete>
+            <Silueta class="hero__silueta" />
+          </div>
+
+          <svg class="hero__capa" viewBox="0 0 400 360" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <mask id="mascara-cuerda" maskUnits="userSpaceOnUse" x="-40" y="-40" width="480" height="440">
+                <path
+                  class="cuerda-trazo"
+                  data-cuerda
+                  d="M286 130 C300 64 222 40 176 94"
+                  fill="none"
+                  stroke="#fff"
+                  stroke-width="12"
+                  pathLength="1"
+                />
+              </mask>
+            </defs>
+            <g class="hero__cuerda" mask="url(#mascara-cuerda)">
+              <path class="cuerda cuerda--base" data-cuerda d="M286 130 C300 64 222 40 176 94" />
+              <path class="cuerda cuerda--hebra" data-cuerda d="M286 130 C300 64 222 40 176 94" />
+            </g>
+            <g class="baranda">
+              <rect class="baranda__poste" x="14" y="292" width="14" height="68" />
+              <rect class="baranda__poste" x="193" y="292" width="14" height="68" />
+              <rect class="baranda__poste" x="372" y="292" width="14" height="68" />
+              <g class="baranda__rieles baranda__rieles--movil">
+                <rect class="baranda__riel" x="-1200" y="304" width="2800" height="18" rx="2" />
+                <rect class="baranda__riel" x="-1200" y="334" width="2800" height="20" rx="2" />
+                <path class="baranda__veta" d="M-1200 310 H1600 M-1200 341 H1600 M-1200 347 H1600" />
+              </g>
+              <g class="baranda__rieles baranda__rieles--escritorio">
+                <rect class="baranda__riel" x="-30" y="304" width="1630" height="18" rx="2" />
+                <rect class="baranda__riel" x="-30" y="334" width="1630" height="20" rx="2" />
+                <path class="baranda__veta" d="M-30 310 H1600 M-30 341 H1600 M-30 347 H1600" />
+              </g>
+            </g>
+          </svg>
+
+          <ul class="hero__pies" aria-live="polite">
+            {platos.map((x, i) => (
+              <li data-pie hidden={i > 0 ? true : undefined}>
+                <a href={rutaProducto(x.p)}>
+                  <span class="hero__pie-nombre">{x.p.data.nombre}</span>
+                  {precioResumen(x.p) && <span class="hero__pie-precio">{precioResumen(x.p)}</span>}
+                  <small>Photo from the printed menu</small>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )
+    }
+  </section>
+
+  <div class="cinta" aria-hidden="true">
+    <div class="cinta__pista">
+      {
+        [0, 1].map(() => (
+          <p class="cinta__grupo">
+            {cinta.map((t) => (
+              <>
+                <span>{t}</span>
+                <span class="cinta__espuela" />
+              </>
+            ))}
+          </p>
+        ))
+      }
+    </div>
+  </div>
+
+  <section class="platos" aria-labelledby="platos-titulo">
+    <div class="wrap platos__rejilla">
+      <header class="platos__cabeza">
+        <p class="kicker kicker--filete" data-revela="tira">From the kitchen</p>
+        <h2 id="platos-titulo" class="platos__titulo" data-revela="sube">
+          <span class="display">House</span>
+          <span class="serif">plates</span>
+        </h2>
+        <p class="platos__intro" data-revela="sube" style="--orden:1">
+          A few plates from The Rodeo’s menu, from the grill to the sea. Photos come from the printed menu.
+        </p>
+        <a class="enlace" href="/menu/" data-revela="sube" style="--orden:2" data-astro-prefetch>
+          See the full menu <Icono nombre="flecha" />
+        </a>
+      </header>
+
+      <ol class="platos__lista">
+        {
+          galeria.map(({ p, img, cat }, i) => (
+            <li class="plato" data-paralaje={[0.05, -0.03, 0.08, -0.01][i % 4]}>
+              <a href={rutaProducto(p)} class="plato__enlace">
+                <Arco img={img} alt={p.data.nombre} ancho={240} proporcion={1.25} profundidad={0} />
+                <span class="plato__texto" data-revela="sube" style={`--orden:${i}`}>
+                  <span class="plato__cat serif">{cat.data.corto}</span>
+                  <span class="plato__nombre">{p.data.nombre}</span>
+                  {precioResumen(p) && <span class="plato__precio">{precioResumen(p)}</span>}
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { iniciarInicio } from '../scripts/inicio';
+  iniciarInicio();
+</script>
+
+<style>
+  /* Teléfono: título → escena → botones → temporada → lema, todo en una pantalla. */
+  .hero {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'kicker' 'titulo' 'escena' 'acciones' 'temporada' 'lema';
+    align-content: center;
+    justify-items: start;
+    gap: clamp(6px, 1.5svh, 16px);
+    min-height: calc(100svh - var(--header-h) - var(--dock-h) - var(--safe-b));
+    padding-block: clamp(6px, 1.5svh, 20px) clamp(10px, 2svh, 24px);
+  }
+
+  .hero__texto {
+    display: contents;
+  }
+
+  .hero__kicker {
+    grid-area: kicker;
+  }
+
+  .hero__titulo {
+    grid-area: titulo;
+    display: grid;
+    justify-items: start;
+    line-height: 1;
+  }
+
+  .hero__acciones {
+    grid-area: acciones;
+  }
+
+  .hero__temporada {
+    grid-area: temporada;
+  }
+
+  .hero__lema {
+    grid-area: lema;
+  }
+
+  .hero__the {
+    font-size: clamp(1.9rem, 7vw, 3.2rem);
+    line-height: 0.8;
+    margin: 0 0 -0.02em 0.08em;
+  }
+
+  .hero__titulo :global(.hero__rodeo) {
+    font-size: clamp(3.4rem, 18vw, 6.6rem);
+    letter-spacing: 0.01em;
+  }
+
+  .hero__titulo :global(.letra) {
+    transform-origin: 50% 90%;
+  }
+
+  /* Placa de letrero: negra, con doble filete, apenas ladeada. */
+  .hero__placa {
+    margin-top: 0.4em;
+    padding: 0.32em 1em 0.26em;
+    background: var(--c-negro);
+    color: var(--c-beige);
+    box-shadow:
+      inset 0 0 0 3px var(--c-negro),
+      inset 0 0 0 4px var(--c-arena-oscura);
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: clamp(0.92rem, 3.8vw, 1.35rem);
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    transform: rotate(-1.5deg);
+  }
+
+  .hero__lema {
+    max-width: 36ch;
+    color: var(--texto-suave);
+    font-size: clamp(0.95rem, 3.6vw, 1.12rem);
+    line-height: 1.45;
+  }
+
+  .hero__lema span {
+    display: none;
+    margin-top: 4px;
+    font-family: var(--f-label);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-size: 0.86em;
+    color: var(--texto);
+  }
+
+  .hero__acciones {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .hero__acciones .btn {
+    padding: 0 1em;
+    font-size: 0.98rem;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+  }
+
+  .hero__acciones .btn:first-child {
+    flex: 1 1 auto;
+  }
+
+  /* Acceso a Halloween: discreto, con la luna en ascua sobre una insignia negra. */
+  .hero__temporada {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 4px 6px 0;
+    color: var(--texto);
+    text-decoration: none;
+    font-size: 0.92rem;
+    line-height: 1.25;
+  }
+
+  .hero__temporada-luna {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--c-negro);
+    color: #d9692a;
+    transition:
+      box-shadow var(--t-base) var(--ease-out),
+      transform var(--t-base) var(--ease-buck);
+  }
+
+  .hero__temporada-luna :global(svg) {
+    width: 19px;
+    height: 19px;
+  }
+
+  .hero__temporada-texto {
+    display: grid;
+    color: var(--texto-suave);
+  }
+
+  .hero__temporada strong {
+    font-family: var(--f-label);
+    font-size: 1.02rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--texto);
+  }
+
+  .hero__temporada em {
+    font-size: 1.14em;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--resalte);
+  }
+
+  .hero__temporada > :global(svg:last-child) {
+    width: 18px;
+    height: 18px;
+    transition: transform var(--t-base) var(--ease-out);
+  }
+
+  @media (hover: hover) {
+    .hero__temporada:hover .hero__temporada-luna {
+      transform: rotate(-18deg);
+      box-shadow: 0 0 0 4px var(--fondo), 0 0 0 5px var(--resalte);
+    }
+
+    .hero__temporada:hover > :global(svg:last-child) {
+      transform: translateX(4px);
+    }
+  }
+
+  /* ── Escena: sol, medallón, jinete, cuerda y baranda en un mismo lienzo 400×360 ── */
+  .hero__escena {
+    grid-area: escena;
+    position: relative;
+    /* El ancho se ajusta al alto disponible para que la pantalla completa quepa sin desplazarse. */
+    width: min(100%, 560px, calc((100svh - 500px) * 1.11));
+    min-width: 230px;
+    aspect-ratio: 400 / 360;
+    justify-self: center;
+  }
+
+  /* Sol de arena detrás del jinete, con las franjas de los carteles western en su mitad baja. */
+  .hero__sol {
+    position: absolute;
+    left: 43%;
+    top: 4%;
+    width: 58%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle at 42% 36%, #ddceb0, var(--c-arena) 58%, #c6b28c);
+    -webkit-mask: linear-gradient(#000 52%, transparent 52% 56%, #000 56% 63%, transparent 63% 68%, #000 68% 74%, transparent 74% 81%, #000 81% 86%, transparent 86%);
+    mask: linear-gradient(#000 52%, transparent 52% 56%, #000 56% 63%, transparent 63% 68%, #000 68% 74%, transparent 74% 81%, #000 81% 86%, transparent 86%);
+  }
+
+  /* El plato atrapado queda delante de la cola del caballo; la cuerda, encima de todo. */
+  .hero__medallon {
+    position: absolute;
+    left: 4%;
+    top: 18%;
+    width: 50%;
+    z-index: 3;
+  }
+
+  .hero__medallon :global(.medallon) {
+    width: 100%;
+  }
+
+  .hero__siguiente {
+    position: absolute;
+    right: 4%;
+    bottom: 4%;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 0;
+    background: var(--c-negro);
+    color: var(--c-beige);
+    box-shadow: 0 0 0 3px var(--fondo);
+    cursor: pointer;
+    transition: transform var(--t-fast) var(--ease-out);
+  }
+
+  .hero__siguiente :global(svg) {
+    width: 19px;
+    height: 19px;
+  }
+
+  .hero__siguiente:active {
+    transform: scale(0.92) rotate(-10deg);
+  }
+
+  .hero__jinete {
+    position: absolute;
+    left: 43%;
+    top: 34%;
+    width: 55%;
+    z-index: 2;
+    transform-origin: 62% 96%;
+    pointer-events: none;
+    color: var(--c-negro);
+  }
+
+  .hero__jinete :global(.hero__silueta) {
+    width: 100%;
+    transform-origin: 62% 96%;
+  }
+
+  .hero__capa {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 4;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .cuerda {
+    fill: none;
+    stroke-linecap: round;
+  }
+
+  .cuerda-trazo {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+  }
+
+  /* ── Entrada del inicio, en CSS: arranca con el primer pintado (no espera al JavaScript),
+     así el contenido principal aparece de inmediato. Con "fill-mode: backwards" la animación
+     solo manda antes de terminar; después, GSAP mueve libremente al jinete y la cuerda.
+     Si se llega por la puerta de corral, todo espera a que se abra (--retraso). ── */
+  .hero {
+    --retraso: 0s;
+  }
+
+  :global(html.con-puerta) .hero {
+    --retraso: 0.55s;
+  }
+
+  :global(html[data-motion='on']) .hero__titulo :global(.letra) {
+    animation: letra-corcovea 0.85s cubic-bezier(0.34, 1.75, 0.5, 1) backwards;
+    animation-delay: calc(var(--retraso) + var(--i) * 70ms);
+  }
+
+  :global(html[data-motion='on']) .hero__titulo :global(.letra:nth-child(even)) {
+    --giro: 18deg;
+  }
+
+  :global(html[data-motion='on']) [data-entra] {
+    animation: tirar-cuerda 0.7s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation-delay: calc(var(--retraso) + 0.2s + var(--i) * 70ms);
+  }
+
+  :global(html[data-motion='on']) .hero__sol {
+    animation: sol-sale 1.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation-delay: calc(var(--retraso) + 0.05s);
+  }
+
+  :global(html[data-motion='on']) .hero__jinete {
+    animation: galope 1.35s linear backwards;
+    animation-delay: calc(var(--retraso) + 0.12s);
+  }
+
+  :global(html[data-motion='on']) .cuerda-trazo {
+    animation: trazo 0.42s cubic-bezier(0.65, 0, 0.35, 1) backwards;
+    animation-delay: calc(var(--retraso) + 0.6s);
+  }
+
+  :global(html[data-motion='on']) .hero__medallon :global(.lazo-trazo) {
+    animation: trazo 0.42s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation-delay: calc(var(--retraso) + 0.95s);
+  }
+
+  :global(html[data-motion='on']) .hero__medallon :global(.medallon__plato) {
+    animation: plato-atrapado 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation-delay: calc(var(--retraso) + 1.15s);
+  }
+
+  :global(html[data-motion='on']) .hero__medallon :global(.medallon) {
+    animation: lazo-aprieta 0.85s ease-out backwards;
+    animation-delay: calc(var(--retraso) + 1.15s);
+  }
+
+  :global(html[data-motion='on']) .hero__pies {
+    animation: tirar-cuerda 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation-delay: calc(var(--retraso) + 1.45s);
+  }
+
+  :global(html[data-motion='on']) .hero__siguiente {
+    animation: boton-salta 0.5s cubic-bezier(0.34, 1.75, 0.5, 1) backwards;
+    animation-delay: calc(var(--retraso) + 1.6s);
+  }
+
+  @keyframes boton-salta {
+    from {
+      opacity: 0;
+      transform: scale(0) rotate(-90deg);
+    }
+  }
+
+  @keyframes letra-corcovea {
+    from {
+      opacity: 0;
+      transform: translateY(-140%) rotate(var(--giro, -18deg));
+    }
+  }
+
+  @keyframes tirar-cuerda {
+    from {
+      opacity: 0;
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      opacity: 1;
+      clip-path: inset(0 0% 0 0);
+    }
+  }
+
+  @keyframes sol-sale {
+    from {
+      opacity: 0;
+      transform: translateY(14%) scale(0.92);
+    }
+  }
+
+  /* Entra desde la derecha, aterriza detrás de la baranda y corcovea. */
+  @keyframes galope {
+    0% {
+      opacity: 0;
+      transform: translateX(70%) rotate(16deg);
+      animation-timing-function: cubic-bezier(0.2, 0.8, 0.3, 1);
+    }
+    36% {
+      opacity: 1;
+      transform: none;
+      animation-timing-function: cubic-bezier(0.3, 0.8, 0.4, 1);
+    }
+    49% {
+      transform: translateY(-14px) rotate(-10deg);
+      animation-timing-function: ease-in;
+    }
+    63% {
+      transform: rotate(6deg);
+      animation-timing-function: ease-out;
+    }
+    80% {
+      transform: rotate(-2deg);
+    }
+    100% {
+      transform: none;
+    }
+  }
+
+  @keyframes trazo {
+    from {
+      stroke-dashoffset: 1;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes plato-atrapado {
+    from {
+      clip-path: circle(0% at 50% 50%);
+    }
+    to {
+      clip-path: circle(50% at 50% 50%);
+    }
+  }
+
+  @keyframes lazo-aprieta {
+    0% {
+      transform: scale(1.14);
+    }
+    40% {
+      transform: scale(0.95);
+    }
+    70% {
+      transform: scale(1.03);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  .cuerda--base {
+    stroke: var(--cuerda);
+    stroke-width: 3.4;
+  }
+
+  .cuerda--hebra {
+    stroke: var(--cuerda-oscura);
+    stroke-width: 3.4;
+    stroke-dasharray: 1.4 2.4;
+  }
+
+  .baranda__riel {
+    fill: var(--c-carbon);
+    stroke: var(--c-negro);
+    stroke-width: 1.5;
+  }
+
+  .baranda__poste {
+    fill: var(--c-negro);
+  }
+
+  .baranda__veta {
+    stroke: var(--c-cuerda-oscura);
+    stroke-width: 1;
+    opacity: 0.55;
+  }
+
+  /* En el teléfono la baranda cruza toda la pantalla; en escritorio solo el lado de la escena. */
+  .baranda__rieles--escritorio {
+    display: none;
+  }
+
+  @media (min-width: 900px) {
+    .baranda__rieles--movil {
+      display: none;
+    }
+
+    .baranda__rieles--escritorio {
+      display: inline;
+    }
+  }
+
+  .hero__pies {
+    position: absolute;
+    left: 0;
+    top: 2%;
+    width: 62%;
+    z-index: 5;
+    text-align: left;
+  }
+
+  .hero__pies a {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 6px 12px 5px;
+    background: var(--c-negro);
+    color: var(--c-beige);
+    text-decoration: none;
+    font-family: var(--f-label);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1.15;
+  }
+
+  .hero__pie-nombre {
+    font-size: clamp(0.9rem, 3.6vw, 1.06rem);
+  }
+
+  .hero__pie-precio {
+    color: var(--c-arena);
+    font-size: clamp(0.9rem, 3.6vw, 1.06rem);
+  }
+
+  .hero__pies small {
+    flex-basis: 100%;
+    font-family: var(--f-body);
+    font-weight: 400;
+    font-size: 0.7rem;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    color: var(--hondo-suave);
+  }
+
+  @media (min-width: 900px) {
+    .hero {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+      grid-template-areas: 'texto escena';
+      align-items: center;
+      gap: 40px;
+    }
+
+    .hero__texto {
+      grid-area: texto;
+      display: grid;
+      gap: clamp(12px, 2.2svh, 24px);
+      justify-items: start;
+    }
+
+    .hero__texto > * {
+      grid-area: auto;
+    }
+
+    .hero__titulo :global(.hero__rodeo) {
+      font-size: clamp(4rem, 9.2vw, 9rem);
+    }
+
+    .hero__escena {
+      width: 100%;
+      max-width: 640px;
+      min-width: 0;
+    }
+
+    .hero__acciones {
+      width: auto;
+    }
+
+    .hero__lema span {
+      display: block;
+    }
+
+    .hero__acciones .btn {
+      padding: 0 1.55em;
+      font-size: 1.04rem;
+      letter-spacing: 0.14em;
+    }
+  }
+
+  /* Teléfonos bajitos: se compacta para que todo quepa sin desplazarse. */
+  @media (max-width: 899px) and (max-height: 740px) {
+    .hero__titulo :global(.hero__rodeo) {
+      font-size: clamp(3rem, 15vw, 5rem);
+    }
+
+    .hero__lema {
+      display: none;
+    }
+  }
+
+  /* ── Cinta: las categorías del menú pasan despacio, como un letrero corrido ── */
+  .cinta {
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    background: var(--hondo);
+    color: var(--hondo-texto);
+    border-block: 1px solid var(--c-negro);
+  }
+
+  .cinta__pista {
+    display: flex;
+    width: max-content;
+  }
+
+  :global(html[data-motion='on']) .cinta__pista {
+    animation: cinta 60s linear infinite;
+  }
+
+  .cinta:hover .cinta__pista {
+    animation-play-state: paused;
+  }
+
+  .cinta__grupo {
+    display: flex;
+    align-items: center;
+    gap: clamp(18px, 3vw, 36px);
+    padding: 16px clamp(9px, 1.5vw, 18px);
+    font-family: var(--f-display);
+    font-size: clamp(1.1rem, 2.4vw, 1.6rem);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .cinta__espuela {
+    width: 12px;
+    height: 12px;
+    background: var(--c-arena-oscura);
+    clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  }
+
+  @keyframes cinta {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  /* ── House plates: arcos de misión en una composición escalonada ── */
+  .platos {
+    position: relative;
+    z-index: 1;
+    padding-block: clamp(56px, 10vw, 128px) clamp(64px, 11vw, 140px);
+  }
+
+  .platos__rejilla {
+    display: grid;
+    gap: clamp(32px, 5vw, 56px);
+  }
+
+  .platos__cabeza {
+    display: grid;
+    justify-items: start;
+    align-content: start;
+    gap: 14px;
+    /* El título se mide contra su columna, no contra la ventana. */
+    container-type: inline-size;
+  }
+
+  .platos__titulo {
+    display: grid;
+    line-height: 0.86;
+  }
+
+  .platos__titulo .display {
+    font-size: clamp(2.6rem, 19cqi, 6.4rem);
+  }
+
+  .platos__titulo .serif {
+    font-size: clamp(2.8rem, 21cqi, 6.6rem);
+    margin-left: 0.6em;
+    margin-top: -0.06em;
+    color: var(--texto-suave);
+  }
+
+  .platos__intro {
+    max-width: 34ch;
+    color: var(--texto-suave);
+    font-size: 1.05rem;
+  }
+
+  .platos__lista {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 36px 18px;
+    align-items: start;
+  }
+
+  /* Escalonado: la segunda columna baja, como fotos clavadas en una pared. */
+  .plato:nth-child(even) {
+    margin-top: 56px;
+  }
+
+  .plato__enlace {
+    display: grid;
+    justify-items: center;
+    gap: 14px;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .plato__texto {
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    text-align: center;
+  }
+
+  .plato__cat {
+    font-size: 1.15rem;
+    color: var(--texto-suave);
+  }
+
+  .plato__nombre {
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 1.1rem;
+    line-height: 1.15;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat;
+    transition: background-size var(--t-base) var(--ease-rope);
+  }
+
+  .plato__precio {
+    font-family: var(--f-display);
+    font-size: 1.05rem;
+  }
+
+  @media (hover: hover) {
+    .plato__enlace:hover .plato__nombre {
+      background-size: 100% 1px;
+    }
+  }
+
+  @media (min-width: 900px) {
+    .platos__rejilla {
+      grid-template-columns: minmax(260px, 0.8fr) minmax(0, 2.2fr);
+      align-items: start;
+    }
+
+    .platos__cabeza {
+      position: sticky;
+      top: calc(var(--header-h) + 40px);
+    }
+
+    .platos__lista {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 24px;
+    }
+
+    .plato:nth-child(even) {
+      margin-top: 0;
+    }
+
+    .plato:nth-child(2) {
+      margin-top: 120px;
+    }
+
+    .plato:nth-child(3) {
+      margin-top: 40px;
+    }
+
+    .plato:nth-child(4) {
+      margin-top: 170px;
+    }
+  }
+</style>

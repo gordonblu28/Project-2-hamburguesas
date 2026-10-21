@@ -1,0 +1,295 @@
+---
+import Marca from './Marca.astro';
+import Icono from './Icono.astro';
+import { NEGOCIO, TEL_HREF, TEMPORADA } from '../lib/datos';
+
+export type Pagina = 'inicio' | 'menu' | 'favoritos' | 'visita' | 'temporada' | undefined;
+interface Props {
+  actual?: Pagina;
+}
+
+const { actual } = Astro.props;
+const enlaces = [
+  { href: '/', texto: 'Home', id: 'inicio' },
+  { href: '/menu/', texto: 'Menu', id: 'menu' },
+  { href: '/favorites/', texto: 'Favorites', id: 'favoritos' },
+  { href: '/visit/', texto: 'Visit', id: 'visita' },
+] as const;
+---
+
+<header class="cabecera">
+  <div class="cabecera__fila">
+    <a class="cabecera__logo" href="/" aria-label={`${NEGOCIO.nombre} — Home`} aria-current={actual === 'inicio' ? 'page' : undefined}>
+      <Marca />
+    </a>
+
+    <nav class="cabecera__nav" aria-label="Main">
+      <ul>
+        {
+          enlaces.map((e) => (
+            <li>
+              <a href={e.href} aria-current={actual === e.id ? 'page' : undefined} data-astro-prefetch>
+                {e.texto}
+              </a>
+            </li>
+          ))
+        }
+        {
+          TEMPORADA.visible && (
+            <li class="cabecera__especial" data-temporada-aviso>
+              <a href={TEMPORADA.ruta} aria-current={actual === 'temporada' ? 'page' : undefined} data-astro-prefetch>
+                <Icono nombre="luna" class="cabecera__luna" />
+                <span>
+                  {TEMPORADA.nombre_corto} <em class="serif">Special</em>
+                </span>
+              </a>
+            </li>
+          )
+        }
+      </ul>
+    </nav>
+
+    <div class="cabecera__acciones">
+      <button class="boton-icono" type="button" data-interruptor-movimiento aria-pressed="false">
+        <Icono nombre="pausa" class="si-movimiento" />
+        <Icono nombre="play" class="sin-movimiento" />
+        <span class="visually-hidden" data-etiqueta>Pause animations</span>
+      </button>
+      <a class="boton-icono boton-icono--tel" href={TEL_HREF}>
+        <Icono nombre="telefono" />
+        <span class="cabecera__tel">{NEGOCIO.telefono.visible}</span>
+        <span class="visually-hidden">Call {NEGOCIO.nombre}</span>
+      </a>
+    </div>
+  </div>
+</header>
+
+<style>
+  .cabecera {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 50;
+    height: var(--header-h);
+    background: var(--cabecera-fondo);
+    border-bottom: 1px solid var(--linea);
+    backdrop-filter: blur(12px) saturate(1.1);
+    -webkit-backdrop-filter: blur(12px) saturate(1.1);
+    color: var(--texto);
+  }
+
+  .cabecera__fila {
+    height: 100%;
+    max-width: 1320px;
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .cabecera__logo {
+    display: block;
+    flex: none;
+    text-decoration: none;
+  }
+
+  /* El jinete corcovea al pasar el cursor por la marca. */
+  @media (hover: hover) {
+    .cabecera__logo:hover :global(.marca__insignia) {
+      transform: rotate(-7deg) translateY(-2px);
+    }
+  }
+
+  .cabecera__nav {
+    display: none;
+    margin-inline: auto;
+  }
+
+  .cabecera__nav ul {
+    display: flex;
+    align-items: center;
+    gap: clamp(4px, 1.6vw, 22px);
+  }
+
+  .cabecera__nav a {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 6px;
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--texto-suave);
+    transition: color var(--t-fast);
+  }
+
+  /* Subrayado que se tensa como una cuerda al pasar el cursor. */
+  .cabecera__nav a::after {
+    content: '';
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    bottom: 3px;
+    height: 1.5px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: 100% 50%;
+    transition: transform var(--t-base) var(--ease-rope);
+  }
+
+  .cabecera__nav a:hover,
+  .cabecera__nav a[aria-current='page'] {
+    color: var(--texto);
+  }
+
+  .cabecera__nav a:hover::after,
+  .cabecera__nav a[aria-current='page']::after {
+    transform: scaleX(1);
+    transform-origin: 0 50%;
+  }
+
+  /* Acceso a Halloween: se distingue con la luna en ascua y la palabra en cursiva. */
+  .cabecera__especial {
+    margin-left: clamp(4px, 1vw, 12px);
+    padding-left: clamp(10px, 1.6vw, 22px);
+    border-left: 1px solid var(--linea);
+  }
+
+  .cabecera__especial a {
+    color: var(--texto);
+  }
+
+  .cabecera__especial em {
+    font-size: 1.12em;
+    letter-spacing: 0.02em;
+    color: var(--resalte);
+  }
+
+  .cabecera__especial :global(.cabecera__luna) {
+    width: 17px;
+    height: 17px;
+    color: var(--resalte);
+    transition: transform var(--t-base) var(--ease-buck);
+  }
+
+  :global(html[data-motion='on']) .cabecera__especial :global(.cabecera__luna) {
+    animation: brasa 3.8s ease-in-out infinite;
+  }
+
+  @media (hover: hover) {
+    .cabecera__especial a:hover :global(.cabecera__luna) {
+      transform: rotate(-24deg) scale(1.12);
+    }
+  }
+
+  @keyframes brasa {
+    0%,
+    100% {
+      filter: drop-shadow(0 0 0 transparent);
+    }
+    50% {
+      filter: drop-shadow(0 0 5px color-mix(in srgb, var(--resalte) 65%, transparent));
+    }
+  }
+
+  .cabecera__acciones {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .boton-icono {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 44px;
+    height: 44px;
+    padding: 0 10px;
+    border: 1.5px solid var(--linea);
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--texto);
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      border-color var(--t-fast),
+      background-color var(--t-fast),
+      color var(--t-fast),
+      transform var(--t-fast) var(--ease-out);
+  }
+
+  .boton-icono :global(svg) {
+    width: 19px;
+    height: 19px;
+  }
+
+  .boton-icono:active {
+    transform: scale(0.94);
+  }
+
+  @media (hover: hover) {
+    .boton-icono:hover {
+      border-color: var(--texto);
+    }
+  }
+
+  .boton-icono--tel {
+    background: var(--acento);
+    border-color: var(--acento);
+    color: var(--sobre-acento);
+  }
+
+  @media (hover: hover) {
+    .boton-icono--tel:hover {
+      border-color: var(--acento);
+      box-shadow:
+        inset 0 0 0 3px var(--acento),
+        inset 0 0 0 4px var(--sobre-acento);
+    }
+  }
+
+  .cabecera__tel {
+    display: none;
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.1em;
+  }
+
+  /* Sin JavaScript el botón de pausa no sirve: se oculta. Con JavaScript ocupa su sitio desde el
+     primer pintado (html.js lo pone el script del <head>), así la cabecera no salta. */
+  :global(html:not(.js)) [data-interruptor-movimiento] {
+    display: none;
+  }
+
+  [data-interruptor-movimiento] :global(.sin-movimiento),
+  [data-interruptor-movimiento][aria-pressed='true'] :global(.si-movimiento) {
+    display: none;
+  }
+
+  [data-interruptor-movimiento][aria-pressed='true'] :global(.sin-movimiento) {
+    display: block;
+  }
+
+  @media (min-width: 900px) {
+    .cabecera__nav {
+      display: block;
+    }
+
+    .boton-icono--tel {
+      padding: 0 16px;
+    }
+  }
+
+  @media (min-width: 1180px) {
+    .cabecera__tel {
+      display: inline;
+    }
+  }
+</style>

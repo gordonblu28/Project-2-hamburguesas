@@ -1,0 +1,953 @@
+---
+import Base from '../../layouts/Base.astro';
+import Fila from '../../components/Fila.astro';
+import Medallon from '../../components/Medallon.astro';
+import Letras from '../../components/Letras.astro';
+import Icono, { type NombreIcono } from '../../components/Icono.astro';
+import { menuCompleto, foto } from '../../lib/menu';
+import { NEGOCIO, TEMPORADA, TEL_HREF } from '../../lib/datos';
+
+const grupos = await menuCompleto();
+// Orden de navegación: comida y bar. La temporada tiene su propia página.
+const orden = grupos.map((g) => g.categoria.id);
+const total = orden.length;
+const posicion = (id: string) => String(orden.indexOf(id) + 1).padStart(2, '0');
+const vecinos = (id: string) => {
+  const i = orden.indexOf(id);
+  const nombre = (c?: string) => grupos.find((g) => g.categoria.id === c)?.categoria.data.corto;
+  return {
+    antes: i > 0 ? { id: orden[i - 1], nombre: nombre(orden[i - 1]) } : null,
+    despues: i < orden.length - 1 ? { id: orden[i + 1], nombre: nombre(orden[i + 1]) } : null,
+  };
+};
+const secciones = [
+  { id: 'kitchen', texto: 'Kitchen', primera: grupos.find((g) => g.categoria.data.seccion === 'kitchen')!.categoria.id, icono: 'menu' as NombreIcono },
+  { id: 'bar', texto: 'Bar', primera: grupos.find((g) => g.categoria.data.seccion === 'bar')!.categoria.id, icono: 'margarita' as NombreIcono },
+];
+const totalProductos = grupos.reduce((n, g) => n + g.productos.length, 0);
+const iconos: NombreIcono[] = ['estrella', 'margarita', 'coctel', 'cerveza', 'botella', 'refresco'];
+---
+
+<Base
+  titulo={`Menu · ${NEGOCIO.nombre}`}
+  descripcion={`Full menu of ${NEGOCIO.nombre} in Leon Valley, TX: appetizers, Tex-Mex plates, steaks, parrilladas, molcajetes, seafood, tacos, margaritas and beer, with prices.`}
+  actual="menu"
+  clase="pagina-menu"
+>
+  <div class="menu" data-menu data-total={totalProductos} data-ruta-temporada={TEMPORADA.ruta}>
+    <div class="menu__barra">
+      <div class="wrap menu__barra-fila">
+        <h1 class="menu__titulo display">Menu</h1>
+        <div class="menu__secciones" aria-label="Menu sections">
+          {
+            secciones.map((s) => (
+              <a class:list={['seccion', `seccion--${s.id}`]} href={`#${s.primera}`} data-seccion={s.id} data-destino={s.primera}>
+                <Icono nombre={s.icono} />
+                {s.texto}
+              </a>
+            ))
+          }
+          {
+            TEMPORADA.visible && (
+              <a class="seccion seccion--temporada" href={TEMPORADA.ruta} data-temporada-aviso>
+                <Icono nombre="luna" />
+                <span>
+                  {TEMPORADA.nombre_corto}
+                  <span class="seccion__extra"> Special</span>
+                </span>
+              </a>
+            )
+          }
+        </div>
+        <button class="menu__lupa" type="button" data-abrir-buscador aria-expanded="false" aria-controls="buscador" hidden>
+          <Icono nombre="buscar" />
+          <span class="visually-hidden">Search the menu</span>
+        </button>
+      </div>
+
+      <form class="wrap menu__buscador" id="buscador" role="search" data-buscador hidden>
+        <label class="visually-hidden" for="buscar-menu">Search the menu</label>
+        <Icono nombre="buscar" />
+        <input
+          id="buscar-menu"
+          type="search"
+          placeholder="Search dishes, drinks, ingredients…"
+          autocomplete="off"
+          enterkeyhint="search"
+          data-busqueda-entrada
+        />
+        <button type="button" class="menu__cerrar-buscador" data-cerrar-buscador>
+          <Icono nombre="cerrar" />
+          <span class="visually-hidden">Close search</span>
+        </button>
+      </form>
+
+      <nav class="menu__pestanas" aria-label="Menu categories">
+        <div class="wrap menu__pestanas-carril" role="tablist" data-pestanas>
+          {
+            grupos.map((g, i) => (
+              <>
+                {i > 0 && g.categoria.data.seccion !== grupos[i - 1].categoria.data.seccion && (
+                  <span class="pestanas__separador" aria-hidden="true">
+                    Bar
+                  </span>
+                )}
+                <a
+                  class="pestana"
+                  role="tab"
+                  id={`pestana-${g.categoria.id}`}
+                  href={`#${g.categoria.id}`}
+                  aria-controls={g.categoria.id}
+                  data-cat={g.categoria.id}
+                  data-seccion={g.categoria.data.seccion}
+                >
+                  {g.categoria.data.corto}
+                  <span class="pestana__cuenta" aria-hidden="true">
+                    {g.productos.length}
+                  </span>
+                </a>
+              </>
+            ))
+          }
+        </div>
+      </nav>
+    </div>
+
+    <div class="wrap menu__cuerpo">
+      {
+        grupos.map(({ categoria: c, productos }) => {
+          const img = foto(c.data.foto);
+          const v = vecinos(c.id);
+          return (
+            <section
+              class="panel"
+              id={c.id}
+              role="tabpanel"
+              aria-labelledby={`titulo-${c.id}`}
+              data-panel={c.id}
+              data-seccion={c.data.seccion}
+              data-icono={c.data.icono ?? 'estrella'}
+            >
+              <header class="panel__escena">
+                <div class="panel__meta">
+                  <p class="panel__indice">
+                    <span>{posicion(c.id)}</span> / {String(total).padStart(2, '0')} · {c.data.seccion === 'bar' ? 'Bar' : 'Kitchen'}
+                  </p>
+                  <p class="panel__cuenta">
+                    {productos.length} {productos.length === 1 ? 'item' : 'items'}
+                  </p>
+                </div>
+                <h2 class="panel__titulo display" id={`titulo-${c.id}`} tabindex="-1">
+                  <Letras texto={c.data.nombre} />
+                </h2>
+                {c.data.nota && <p class="panel__nota">{c.data.nota}</p>}
+                <div class="panel__medallon" data-medallon-categoria>
+                  <Medallon
+                    img={img}
+                    alt={c.data.foto_alt ?? (img ? productos.find((p) => p.data.foto === c.data.foto)?.data.nombre ?? c.data.nombre : '')}
+                    lado={220}
+                    icono={c.data.icono ?? 'estrella'}
+                    marca={img ? undefined : c.data.corto}
+                  />
+                </div>
+              </header>
+
+              <ul class="panel__lista">
+                {productos.map((p) => (
+                  <li>
+                    <Fila producto={p} categoria={c} />
+                  </li>
+                ))}
+              </ul>
+
+              <nav class="panel__vecinos" aria-label="More of the menu">
+                {v.antes && (
+                  <a class="vecino vecino--antes" href={`#${v.antes.id}`} data-ir={v.antes.id}>
+                    <Icono nombre="flecha-izq" />
+                    <span>Previous</span>
+                    {v.antes.nombre}
+                  </a>
+                )}
+                {v.despues && (
+                  <a class="vecino vecino--despues" href={`#${v.despues.id}`} data-ir={v.despues.id}>
+                    <span>Next</span>
+                    {v.despues.nombre}
+                    <Icono nombre="flecha" />
+                  </a>
+                )}
+              </nav>
+            </section>
+          );
+        })
+      }
+
+      <section class="resultados" data-resultados hidden aria-labelledby="resultados-titulo">
+        <h2 class="resultados__titulo" id="resultados-titulo" data-resultados-titulo aria-live="polite"></h2>
+        <ul class="panel__lista" data-resultados-lista></ul>
+        <p class="resultados__vacio" data-resultados-vacio hidden>
+          Nothing on the menu matches that. Try another word — or call us at <a href={TEL_HREF}>{NEGOCIO.telefono.visible}</a>.
+        </p>
+      </section>
+
+      <p class="menu__nota-fotos">
+        Dish photos come from The Rodeo’s printed menu. Prices in US dollars; menu items and prices may change — please confirm with your server.
+      </p>
+    </div>
+
+    <dialog class="ficha" data-ficha aria-labelledby="ficha-titulo">
+      <div class="ficha__hoja" data-ficha-hoja>
+        <div class="ficha__asa" data-ficha-asa aria-hidden="true"><span></span></div>
+        <button class="ficha__cerrar" type="button" data-cerrar-ficha>
+          <Icono nombre="cerrar" />
+          <span class="visually-hidden">Close</span>
+        </button>
+        <div class="ficha__medallon" data-ficha-medallon></div>
+        <div class="ficha__info" data-ficha-info></div>
+        <div class="ficha__pasos">
+          <button type="button" class="ficha__paso" data-ficha-paso="-1">
+            <Icono nombre="flecha-izq" />
+            <span>Previous dish</span>
+          </button>
+          <button type="button" class="ficha__paso" data-ficha-paso="1">
+            <span>Next dish</span>
+            <Icono nombre="flecha" />
+          </button>
+        </div>
+      </div>
+    </dialog>
+
+    {
+      iconos.map((i) => (
+        <template data-emblema={i}>
+          <Medallon lado={260} icono={i} />
+        </template>
+      ))
+    }
+  </div>
+</Base>
+
+<script>
+  import { iniciarMenu } from '../../scripts/menu';
+  iniciarMenu();
+</script>
+
+<style>
+  .menu__barra {
+    position: sticky;
+    top: var(--header-h);
+    z-index: 20;
+    padding-top: 8px;
+    background: linear-gradient(to bottom, var(--fondo) 84%, rgb(231 220 200 / 0));
+  }
+
+  .menu__barra-fila {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .menu__titulo {
+    font-size: clamp(1.7rem, 7vw, 2.4rem);
+    margin-right: auto;
+  }
+
+  .menu__secciones {
+    display: flex;
+    gap: 6px;
+    flex: 1;
+  }
+
+  /* En el teléfono el título se oculta a la vista (la barra inferior ya dice "Menu") y las
+     secciones ocupan todo el ancho. */
+  @media (max-width: 599px) {
+    .menu__titulo {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+
+    .menu__secciones .seccion {
+      flex: 1;
+      justify-content: center;
+      padding: 0 6px;
+    }
+
+    .menu__secciones .seccion--temporada {
+      flex: none;
+      padding: 0 10px;
+      letter-spacing: 0.06em;
+    }
+
+    .seccion__extra {
+      display: none;
+    }
+  }
+
+  @media (max-width: 419px) {
+    .menu__secciones .seccion:not(.seccion--temporada) :global(svg) {
+      display: none;
+    }
+  }
+
+  @media (min-width: 600px) {
+    .menu__secciones {
+      flex: none;
+    }
+  }
+
+  .seccion {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 42px;
+    padding: 0 14px;
+    border-radius: var(--radius);
+    border: 1.5px solid var(--linea);
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--texto-suave);
+    white-space: nowrap;
+    transition:
+      background-color var(--t-fast),
+      color var(--t-fast),
+      border-color var(--t-fast);
+  }
+
+  .seccion :global(svg) {
+    width: 18px;
+    height: 18px;
+    flex: none;
+  }
+
+  @media (hover: hover) {
+    .seccion:hover {
+      border-color: var(--texto);
+      color: var(--texto);
+    }
+  }
+
+  .seccion[aria-current='true'] {
+    background: var(--acento);
+    border-color: var(--acento);
+    color: var(--sobre-acento);
+  }
+
+  /* Acceso a la página de Halloween: contorno en ascua (no se confunde con la sección activa);
+     al pasar el cursor cae la noche. */
+  .seccion--temporada {
+    border-color: color-mix(in srgb, var(--resalte) 55%, transparent);
+    color: var(--resalte);
+  }
+
+  @media (hover: hover) {
+    .seccion--temporada:hover {
+      background: var(--c-negro);
+      border-color: var(--c-negro);
+      color: var(--c-beige);
+    }
+
+    .seccion--temporada:hover :global(svg) {
+      color: #d9692a;
+    }
+  }
+
+  .menu__lupa,
+  .menu__cerrar-buscador {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    flex: none;
+    border-radius: var(--radius);
+    border: 1.5px solid var(--linea);
+    background: transparent;
+    cursor: pointer;
+    transition: border-color var(--t-fast);
+  }
+
+  @media (hover: hover) {
+    .menu__lupa:hover,
+    .menu__cerrar-buscador:hover {
+      border-color: var(--texto);
+    }
+  }
+
+  .menu__lupa :global(svg),
+  .menu__cerrar-buscador :global(svg) {
+    width: 20px;
+    height: 20px;
+  }
+
+  .menu__buscador {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .menu__buscador > :global(svg) {
+    width: 22px;
+    height: 22px;
+    flex: none;
+  }
+
+  .menu__buscador input {
+    flex: 1;
+    min-width: 0;
+    height: 48px;
+    padding: 0 16px;
+    border-radius: var(--radius);
+    border: 1.5px solid var(--texto);
+    background: var(--fondo-alto);
+    color: var(--texto);
+    font: 500 1.05rem/1 var(--f-body);
+  }
+
+  .menu__buscador input::placeholder {
+    color: var(--texto-suave);
+  }
+
+  /* Por defecto (sin JS) solo se muestra la barra con las secciones; las categorías van como lista. */
+  .menu__pestanas {
+    margin-top: 8px;
+    overflow: hidden;
+  }
+
+  .menu__pestanas-carril {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    padding-block: 6px 12px;
+    scroll-padding-inline: var(--gutter);
+  }
+
+  .menu__pestanas-carril::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pestana {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex: none;
+    min-height: 42px;
+    padding: 0 14px;
+    border-radius: var(--radius);
+    border: 1.5px solid var(--linea);
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--texto);
+    white-space: nowrap;
+    transition:
+      background-color var(--t-base) var(--ease-out),
+      color var(--t-fast),
+      border-color var(--t-fast),
+      transform var(--t-base) var(--ease-buck);
+  }
+
+  @media (hover: hover) {
+    .pestana:hover {
+      border-color: var(--texto);
+    }
+  }
+
+  .pestana__cuenta {
+    font-size: 0.78rem;
+    color: var(--texto-suave);
+  }
+
+  /* La pestaña elegida corcovea apenas al activarse. */
+  .pestana[aria-selected='true'] {
+    background: var(--acento);
+    border-color: var(--acento);
+    color: var(--sobre-acento);
+    transform: rotate(-1.5deg);
+  }
+
+  .pestana[aria-selected='true'] .pestana__cuenta {
+    color: var(--c-arena);
+  }
+
+  .pestanas__separador {
+    flex: none;
+    padding-inline: 8px 2px;
+    font-family: var(--f-serif);
+    font-style: italic;
+    font-size: 1.2rem;
+    color: var(--texto-suave);
+    border-left: 1px solid var(--linea);
+  }
+
+  /* ── Paneles ── */
+  .menu__cuerpo {
+    display: grid;
+    gap: 40px;
+    padding-top: 12px;
+    padding-bottom: clamp(40px, 7vw, 80px);
+  }
+
+  .panel {
+    scroll-margin-top: calc(var(--header-h) + 150px);
+  }
+
+  /* Teléfono: medallón pequeño con el índice al lado; el título ocupa todo el ancho debajo. */
+  .panel__escena {
+    position: relative;
+    display: grid;
+    grid-template-columns: 92px minmax(0, 1fr);
+    align-items: center;
+    gap: 4px 14px;
+    padding: 14px 0 10px;
+    /* El título se mide contra el ancho de esta columna (cqi), no de la ventana. */
+    container-type: inline-size;
+  }
+
+  .panel__medallon {
+    grid-row: 1;
+    grid-column: 1;
+  }
+
+  .panel__meta {
+    grid-row: 1;
+    grid-column: 2;
+  }
+
+  .panel__titulo,
+  .panel__nota {
+    grid-column: 1 / -1;
+  }
+
+  .panel__titulo:focus {
+    outline: none;
+  }
+
+  /* Sol de arena detrás del medallón (el mismo motivo del inicio). */
+  .panel__escena::before {
+    content: '';
+    position: absolute;
+    right: -10%;
+    top: -20%;
+    width: 70%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgb(210 193 160 / 0.75), rgb(210 193 160 / 0));
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .panel__indice {
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--texto-suave);
+  }
+
+  .panel__indice span {
+    color: var(--texto);
+  }
+
+  .panel__titulo {
+    margin-top: 6px;
+    font-size: clamp(1.6rem, 9.6cqi, 4rem);
+    line-height: 0.95;
+    color: var(--texto);
+    overflow-wrap: anywhere;
+  }
+
+  .panel__titulo :global(.letra) {
+    transform-origin: 50% 85%;
+  }
+
+  .panel__cuenta {
+    margin-top: 2px;
+    font-family: var(--f-serif);
+    font-style: italic;
+    font-size: 1.15rem;
+    color: var(--texto-suave);
+  }
+
+  .panel__nota {
+    margin-top: 8px;
+    justify-self: start;
+    padding: 6px 12px;
+    border-left: 2px solid var(--texto);
+    background: var(--fondo-medio);
+    font-size: 0.95rem;
+    color: var(--texto);
+  }
+
+  .panel__medallon :global(.medallon) {
+    width: 100%;
+  }
+
+  .panel__lista {
+    display: grid;
+  }
+
+  .panel__vecinos {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .vecino {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 50px;
+    padding: 0 16px;
+    border-radius: var(--radius);
+    border: 1.5px solid var(--linea);
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition:
+      border-color var(--t-fast),
+      transform var(--t-base) var(--ease-buck);
+  }
+
+  .vecino span {
+    font-size: 0.74rem;
+    letter-spacing: 0.18em;
+    color: var(--texto-suave);
+  }
+
+  .vecino :global(svg) {
+    width: 20px;
+    height: 20px;
+  }
+
+  .vecino--despues {
+    margin-left: auto;
+  }
+
+  @media (hover: hover) {
+    .vecino:hover {
+      border-color: var(--texto);
+      transform: translateY(-2px) rotate(-1deg);
+    }
+  }
+
+  .resultados__titulo {
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 1.2rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--texto-suave);
+    padding: 8px 0;
+  }
+
+  .resultados__vacio {
+    padding: 20px 0;
+    color: var(--texto-suave);
+  }
+
+  .resultados__vacio a {
+    color: var(--texto);
+  }
+
+  .menu__nota-fotos {
+    font-size: 0.82rem;
+    color: var(--texto-suave);
+    text-align: center;
+  }
+
+  /* ── Modo escenario (con JavaScript): una categoría a la vez ── */
+  :global(.menu--escenario) .panel:not([data-activo]) {
+    display: none;
+  }
+
+  :global(.menu--escenario) .menu__cuerpo {
+    gap: 0;
+  }
+
+  :global(.menu--buscando) .panel {
+    display: none !important;
+  }
+
+  @media (min-width: 900px) {
+    /* En pantallas grandes todas las categorías quedan a la vista (sin carril oculto). */
+    .menu__pestanas-carril {
+      flex-wrap: wrap;
+      overflow: visible;
+      gap: 8px 6px;
+    }
+
+    .panel {
+      display: grid;
+      grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.6fr);
+      column-gap: clamp(28px, 4vw, 64px);
+      align-items: start;
+    }
+
+    .panel__escena {
+      position: sticky;
+      top: calc(var(--header-h) + var(--alto-barra-menu, 150px));
+      grid-template-columns: 1fr;
+      grid-row: span 2;
+      padding-top: 24px;
+    }
+
+    .panel__escena::before {
+      right: auto;
+      left: 10%;
+      top: 30%;
+      width: 90%;
+    }
+
+    .panel__medallon {
+      grid-row: 1;
+      width: min(100%, 240px);
+      margin-bottom: 10px;
+    }
+
+    .panel__meta {
+      grid-row: 2;
+      grid-column: 1;
+    }
+
+    .panel__titulo,
+    .panel__nota {
+      grid-column: 1;
+    }
+
+    .panel__titulo {
+      font-size: clamp(1.8rem, 9.4cqi, 4.2rem);
+    }
+
+    .panel__vecinos {
+      grid-column: 2;
+    }
+  }
+
+  /* ── Ficha ampliada (diálogo) ── */
+  .ficha {
+    width: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    margin: auto 0 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--texto);
+    overflow: visible;
+  }
+
+  .ficha::backdrop {
+    background: rgb(20 18 15 / 0.62);
+    backdrop-filter: blur(4px);
+  }
+
+  .ficha__hoja {
+    position: relative;
+    display: grid;
+    gap: 16px;
+    max-height: 90svh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 10px var(--gutter) calc(20px + var(--safe-b));
+    border-radius: 14px 14px 0 0;
+    border-top: 1px solid var(--linea-fuerte);
+    background:
+      radial-gradient(70% 45% at 50% 0%, rgb(210 193 160 / 0.45), transparent 70%),
+      var(--fondo-alto);
+    box-shadow: 0 -10px 40px rgb(20 18 15 / 0.35);
+  }
+
+  .ficha__asa {
+    display: grid;
+    place-items: center;
+    height: 22px;
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .ficha__asa span {
+    width: 52px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--linea);
+  }
+
+  .ficha__cerrar {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 0;
+    background: var(--acento);
+    color: var(--sobre-acento);
+    cursor: pointer;
+    transition: transform var(--t-base) var(--ease-buck);
+  }
+
+  @media (hover: hover) {
+    .ficha__cerrar:hover {
+      transform: rotate(90deg);
+    }
+  }
+
+  .ficha__cerrar :global(svg) {
+    width: 20px;
+    height: 20px;
+  }
+
+  .ficha__medallon {
+    display: grid;
+    place-items: center;
+    gap: 6px;
+  }
+
+  .ficha .ficha__medallon :global(.medallon) {
+    width: min(var(--lado), 72vw);
+  }
+
+  .ficha__medallon :global(.ficha__pie-foto) {
+    font-size: 0.78rem;
+    color: var(--texto-suave);
+  }
+
+  .ficha__info :global(.fila__nombre) {
+    font-family: var(--f-display);
+    font-weight: 400;
+    font-size: clamp(1.8rem, 7.5vw, 2.6rem);
+    line-height: 1;
+    letter-spacing: 0.01em;
+    color: var(--texto);
+  }
+
+  .ficha__info :global(.fila__guia) {
+    display: none;
+  }
+
+  .ficha__info :global(.fila__linea) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .ficha__info :global(.fila__precio) {
+    font-size: 1.7rem;
+  }
+
+  .ficha__info :global(.fila__desc) {
+    font-size: 1.08rem;
+    color: var(--texto);
+  }
+
+  .ficha__info {
+    display: grid;
+    gap: 10px;
+  }
+
+  .ficha__info :global(.fila__info) {
+    gap: 12px;
+  }
+
+  .ficha__info :global(.ficha__numero) {
+    font-family: var(--f-label);
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--texto-suave);
+  }
+
+  .ficha__pasos {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .ficha__paso {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: var(--radius);
+    border: 1.5px solid var(--linea);
+    background: transparent;
+    font-family: var(--f-label);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: border-color var(--t-fast);
+  }
+
+  @media (hover: hover) {
+    .ficha__paso:not([disabled]):hover {
+      border-color: var(--texto);
+    }
+  }
+
+  .ficha__paso :global(svg) {
+    width: 18px;
+    height: 18px;
+  }
+
+  .ficha__paso[disabled] {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  @media (min-width: 760px) {
+    .ficha {
+      max-width: 860px;
+      margin: auto;
+      width: calc(100% - 48px);
+    }
+
+    .ficha__hoja {
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: 24px 32px;
+      padding: 40px;
+      border-radius: var(--radius);
+      border: 1px solid var(--linea-fuerte);
+      box-shadow:
+        0 0 0 6px var(--fondo-alto),
+        0 0 0 7px var(--linea-fuerte),
+        0 40px 80px -30px rgb(20 18 15 / 0.6);
+    }
+
+    .ficha__asa {
+      display: none;
+    }
+
+    .ficha__pasos {
+      grid-column: 1 / -1;
+    }
+
+    .ficha .ficha__medallon :global(.medallon) {
+      width: min(var(--lado), 320px);
+    }
+  }
+</style>

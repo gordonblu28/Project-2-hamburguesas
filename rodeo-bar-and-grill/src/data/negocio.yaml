@@ -1,0 +1,29 @@
+# Datos del negocio. Fuente: brief del cliente (2026-10-19) y bio pública de Instagram.
+# Un dato vacío ([] o null) no se publica: el sitio muestra la alternativa indicada.
+
+nombre: The Rodeo Bar And Grill
+subtitulo: Mexican Restaurant
+# Bio pública de Instagram (consultada el 2026-10-19), resumida sin cambiar la idea.
+lema: Mexican food made with the best ingredients.
+
+direccion:
+  calle: 7247 Bandera Rd
+  ciudad: Leon Valley
+  estado: TX
+  cp: "78238"
+  pais: US
+
+telefono:
+  visible: (210) 969-6002
+  enlace: "+12109696002"
+
+instagram:
+  usuario: therodeobarandgrill
+  # Enlace limpio (sin el parámetro de seguimiento ?exln= del enlace que se compartió).
+  url: https://www.instagram.com/therodeobarandgrill/
+
+# Horario: PENDIENTE. Mientras esté vacío, el sitio pide llamar para confirmar el horario.
+# Formato: - { dias: Monday – Friday, horas: 11:00 AM – 10:00 PM }
+horario: []
+
+zona_horaria: America/Chicago

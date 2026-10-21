@@ -1,0 +1,39 @@
+# Temporada (hoy, Halloween). Tiene su propia página, /halloween/, con identidad nocturna
+# (morado, naranja quemado y carbón) y se anuncia en la navegación de todo el sitio.
+# Reutilizable: cambie textos, fecha y productos.
+#
+# activa          false = no se anuncia en ninguna parte (la página queda con el mensaje final)
+# nombre_corto    texto del acceso en la navegación ("Halloween" → "Halloween Special")
+# tema            halloween | ninguno (ninguno = la página usa la paleta principal)
+# titulo_portada  palabra grande de la portada de la página; *_cursiva = palabra en cursiva
+# termina         fecha y hora LOCAL del negocio en que termina (AAAA-MM-DDTHH:MM)
+#                 Provisional: fin del 31 de octubre de 2026 = 1 de noviembre de 2026 a las 00:00.
+#                 PENDIENTE confirmar con el cliente si termina a esa hora o al cierre del local.
+# zona_horaria    zona del negocio; todos los visitantes ven el mismo vencimiento
+# al_terminar     mensaje = la página muestra el mensaje final | ocultar = además se quitan los accesos
+# productos       PENDIENTE: el cliente debe enviar nombre, descripción, precio y foto real de cada
+#                 bebida o especial. Mientras la lista esté vacía, la página muestra un aviso neutro
+#                 (nunca productos de ejemplo). Formato:
+#   - nombre: ...
+#     tipo: bebida            (bebida | platillo | promocion; por omisión, bebida)
+#     descripcion: ...        (opcional)
+#     precio: 9.99            (opcional)
+#     foto: archivo-en-src-assets-temporada   (opcional, sin extensión; foto real del producto)
+# Las bebidas con foto forman además la sección "Featured Drinks".
+
+activa: true
+nombre_corto: Halloween
+titulo: Seasonal Items
+subtitulo: Halloween Specials
+tema: halloween
+titulo_portada: Halloween
+titulo_portada_cursiva: Special
+bajada: Seasonal drinks and specials at The Rodeo, for a limited time.
+termina: "2026-11-01T00:00"
+zona_horaria: America/Chicago
+al_terminar: mensaje
+mensaje_final: That’s a wrap on Halloween
+mensaje_final_detalle: Thank you for celebrating the season with us. The full Rodeo menu is ready whenever you are.
+# Texto mientras no haya bebidas ni especiales cargados.
+sin_productos: Our Halloween drinks and specials will be posted here soon. In the meantime, ask your server about this season’s specials — or give us a call.
+productos: []

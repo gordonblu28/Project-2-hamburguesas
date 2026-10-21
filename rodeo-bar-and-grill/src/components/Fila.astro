@@ -1,0 +1,360 @@
+---
+// Un producto del menú. Todo es texto real (se lee sin JavaScript y lo indexa Google);
+// el nombre es un botón que abre la ficha ampliada con la foto grande.
+import { Image } from 'astro:assets';
+import Icono, { type NombreIcono } from './Icono.astro';
+import Medallon from './Medallon.astro';
+import { foto, precio, precioResumen, ETIQUETAS, textoBusqueda, PIE_FOTO, type Producto, type Categoria } from '../lib/menu';
+
+interface Props {
+  producto: Producto;
+  categoria: Categoria;
+}
+
+const { producto, categoria } = Astro.props;
+const d = producto.data;
+const img = foto(d.foto);
+const resumen = precioResumen(producto);
+const iconoCategoria: NombreIcono = categoria.data.icono ?? 'estrella';
+const sinPrecio = !resumen && categoria.data.seccion === 'kitchen';
+const busqueda = textoBusqueda(producto, categoria);
+---
+
+<article class="fila" data-producto={producto.id} data-busqueda={busqueda} data-categoria={categoria.id}>
+  <div class:list={['fila__marca', { 'fila__marca--espuela': !img && !d.numero && !categoria.data.icono }]} aria-hidden="true">
+    {
+      img ? (
+        <Image src={img} alt="" widths={[64, 128]} sizes="64px" quality={72} loading="lazy" decoding="async" />
+      ) : d.numero ? (
+        <span class="fila__numero">{d.numero}</span>
+      ) : categoria.data.icono ? (
+        <Icono nombre={iconoCategoria} />
+      ) : (
+        <span class="espuela" />
+      )
+    }
+  </div>
+
+  <div class="fila__info">
+    <div class="fila__linea">
+      <h3 class="fila__nombre">
+        <button type="button" class="fila__abrir" data-abrir aria-haspopup="dialog">
+          {d.numero && <span class="visually-hidden">Number {d.numero}: </span>}
+          {d.nombre}
+        </button>
+      </h3>
+      <span class="fila__guia" aria-hidden="true"></span>
+      {resumen && <span class="fila__precio">{resumen}</span>}
+      {sinPrecio && <span class="fila__precio fila__precio--pedir">Ask for price</span>}
+    </div>
+
+    {d.descripcion && <p class="fila__desc">{d.descripcion}</p>}
+
+    {
+      d.etiquetas.length > 0 && (
+        <p class="fila__etiquetas">
+          {d.etiquetas.map((e) => (
+            <span class={`chip chip--${e}`}>
+              {e === 'favorite' && <Icono nombre="estrella" />}
+              {e === 'angus' && <Icono nombre="res" />}
+              {ETIQUETAS[e]}
+            </span>
+          ))}
+        </p>
+      )
+    }
+
+    {
+      d.opciones && (
+        <ul class:list={['fila__opciones', { 'fila__opciones--rejilla': d.opciones.length > 4 }]}>
+          {d.opciones.map((o) => (
+            <li>
+              <span>{o.nombre}</span>
+              {o.precio !== undefined && <strong>{precio(o.precio)}</strong>}
+            </li>
+          ))}
+        </ul>
+      )
+    }
+
+    {
+      d.carnes && (
+        <p class="fila__carnes">
+          <span>Choice of meat:</span> {d.carnes.join(' · ')}
+        </p>
+      )
+    }
+
+    {
+      d.lista && (
+        <ul class="fila__lista">
+          {d.lista.map((n) => (
+            <li>{n}</li>
+          ))}
+        </ul>
+      )
+    }
+  </div>
+
+  {
+    img && (
+      <template data-foto>
+        <Medallon img={img} alt={`${d.nombre} at The Rodeo Bar And Grill`} lado={320} />
+        <p class="ficha__pie-foto">{PIE_FOTO}</p>
+      </template>
+    )
+  }
+</article>
+
+<style>
+  .fila {
+    position: relative;
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr);
+    gap: 14px;
+    padding: 18px 12px 18px 10px;
+    border-radius: var(--radius);
+    transition:
+      background-color var(--t-base) var(--ease-out),
+      box-shadow var(--t-base) var(--ease-out),
+      transform var(--t-base) var(--ease-out);
+  }
+
+  .fila::after {
+    content: '';
+    position: absolute;
+    left: 80px;
+    right: 12px;
+    bottom: 0;
+    height: 1px;
+    background: var(--linea);
+  }
+
+  /* Al pasar el cursor la fila se aclara como una tarjeta de papel y el plato corcovea. */
+  @media (hover: hover) {
+    .fila:hover {
+      background: var(--fondo-alto);
+      box-shadow: 0 12px 30px -22px rgb(20 18 15 / 0.5);
+    }
+
+    .fila:hover .fila__marca {
+      transform: rotate(-8deg) scale(1.06);
+    }
+  }
+
+  .fila:active {
+    transform: scale(0.985);
+  }
+
+  .fila__marca {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    background: var(--c-negro);
+    box-shadow:
+      0 0 0 1.5px var(--c-negro),
+      0 0 0 4px var(--cuerda);
+    color: var(--c-arena);
+    transition: transform var(--t-base) var(--ease-buck);
+  }
+
+  .fila__marca :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .fila__marca :global(svg) {
+    width: 26px;
+    height: 26px;
+  }
+
+  /* Sin foto ni número: una espuela pequeña marca el plato sin repetir íconos vacíos. */
+  .fila__marca--espuela {
+    background: none;
+    box-shadow: none;
+    align-items: start;
+    padding-top: 6px;
+  }
+
+  .espuela {
+    width: 13px;
+    height: 13px;
+    background: var(--texto);
+    clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  }
+
+  .fila__numero {
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 1.15rem;
+    letter-spacing: 0.02em;
+    color: var(--c-beige);
+  }
+
+  .fila__info {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .fila__linea {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .fila__nombre {
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 1.3rem;
+    line-height: 1.1;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    min-width: 0;
+  }
+
+  .fila__abrir {
+    padding: 0;
+    border: 0;
+    background: none;
+    text-align: left;
+    text-transform: inherit;
+    letter-spacing: inherit;
+    cursor: pointer;
+  }
+
+  /* Toda la tarjeta abre la ficha. */
+  .fila__abrir::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+  }
+
+  .fila__abrir:focus-visible {
+    outline: none;
+  }
+
+  .fila__abrir:focus-visible::after {
+    outline: 2px solid var(--texto);
+    outline-offset: -2px;
+  }
+
+  /* Guía punteada entre nombre y precio, como en las cartas impresas. */
+  .fila__guia {
+    flex: 1;
+    min-width: 12px;
+    height: 0;
+    border-bottom: 2px dotted var(--c-arena-oscura);
+    transform: translateY(-5px);
+  }
+
+  .fila__precio {
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 1.32rem;
+    color: var(--texto);
+    white-space: nowrap;
+  }
+
+  .fila__precio--pedir {
+    font-size: 0.92rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--texto-suave);
+  }
+
+  .fila__desc {
+    color: var(--texto-suave);
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  .fila__etiquetas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .fila__opciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .fila__opciones li {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 2px;
+    background: var(--fondo-medio);
+    box-shadow: inset 0 0 0 1px var(--linea);
+    font-size: 0.95rem;
+    line-height: 1.3;
+  }
+
+  .fila__opciones strong {
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--texto);
+  }
+
+  .fila__opciones--rejilla {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+
+  .fila__opciones--rejilla li {
+    justify-content: space-between;
+  }
+
+  .fila__carnes {
+    font-size: 0.92rem;
+    color: var(--texto-suave);
+  }
+
+  .fila__carnes span {
+    font-family: var(--f-label);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--texto);
+  }
+
+  .fila__lista {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 8px;
+  }
+
+  .fila__lista li {
+    padding: 3px 10px;
+    border-radius: 2px;
+    background: var(--fondo-medio);
+    box-shadow: inset 0 0 0 1px var(--linea);
+    font-size: 0.95rem;
+  }
+
+  @media (min-width: 900px) {
+    .fila {
+      grid-template-columns: 64px minmax(0, 1fr);
+      gap: 18px;
+      padding: 18px 16px;
+    }
+
+    .fila__marca {
+      width: 64px;
+      height: 64px;
+    }
+
+    .fila::after {
+      left: 98px;
+    }
+  }
+</style>

@@ -1,0 +1,72 @@
+---
+// Firma tipográfica del sitio: la silueta del jinete sobre su línea de suelo, "The Rodeo" en letra
+// de madera y "Bar & Grill" como letrero. El logo oficial a color se muestra en el pie.
+import Silueta from './Silueta.astro';
+
+interface Props {
+  class?: string;
+}
+const { class: clase } = Astro.props;
+---
+
+<span class:list={['marca', clase]}>
+  <span class="marca__insignia">
+    <Silueta class="marca__jinete" />
+  </span>
+  <span class="marca__texto">
+    <span class="marca__nombre">The Rodeo</span>
+    <span class="marca__sub">Bar &amp; Grill</span>
+  </span>
+</span>
+
+<style>
+  .marca {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--texto);
+  }
+
+  /* El dibujo del logo termina en un corte recto: la línea de suelo lo asienta. */
+  .marca__insignia {
+    display: block;
+    width: 42px;
+    padding-bottom: 3px;
+    border-bottom: 1.5px solid currentColor;
+    transform-origin: 50% 100%;
+    transition: transform var(--t-base) var(--ease-buck);
+  }
+
+  .marca__texto {
+    display: grid;
+    line-height: 1;
+  }
+
+  .marca__nombre {
+    font-family: var(--f-display);
+    font-size: 1.12rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .marca__sub {
+    margin-top: 4px;
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 0.64rem;
+    letter-spacing: 0.42em;
+    text-transform: uppercase;
+    color: var(--texto-suave);
+  }
+
+  @media (min-width: 900px) {
+    .marca__insignia {
+      width: 48px;
+    }
+
+    .marca__nombre {
+      font-size: 1.3rem;
+    }
+  }
+</style>

@@ -1,0 +1,1518 @@
+---
+// Halloween en The Rodeo: página propia con identidad nocturna (src/styles/halloween.css).
+// Todo el contenido sale de src/data/temporada.yaml y del menú real: si faltan las bebidas o los
+// especiales, la página lo dice con un aviso neutro; nunca muestra productos de ejemplo.
+import '../../styles/halloween.css';
+import type { ImageMetadata } from 'astro';
+import Base from '../../layouts/Base.astro';
+import Letras from '../../components/Letras.astro';
+import Silueta from '../../components/Silueta.astro';
+import Arco from '../../components/Arco.astro';
+import Icono from '../../components/Icono.astro';
+import { NEGOCIO, TEMPORADA, MAPAS, TEL_HREF } from '../../lib/datos';
+import { categorias, foto, precio } from '../../lib/menu';
+
+const t = TEMPORADA;
+const vigente = t.activa && t.vigenteAlCompilar;
+const nocturna = t.tema === 'halloween';
+
+// Fotos reales de los productos de temporada (src/assets/temporada/).
+const fotos = import.meta.glob<{ default: ImageMetadata }>('../../assets/temporada/*.{jpg,jpeg,png,webp}', { eager: true });
+const fotoTemporada = (nombre?: string) => {
+  if (!nombre) return undefined;
+  const clave = Object.keys(fotos).find((k) => k.split('/').pop()?.replace(/\.\w+$/, '') === nombre);
+  if (!clave) throw new Error(`No existe la foto "${nombre}" en src/assets/temporada/.`);
+  return fotos[clave].default;
+};
+const TIPO = { bebida: 'Drink', platillo: 'Plate', promocion: 'Special' } as const;
+const especiales = t.productos.map((p, i) => ({ ...p, img: fotoTemporada(p.foto), n: String(i + 1).padStart(2, '0') }));
+const bebidas = especiales.filter((p) => p.tipo === 'bebida' && p.img);
+
+// "The Halloween Experience": platos reales del menú, con la luz de la noche.
+const cats = await categorias();
+const experiencia = [
+  { id: 'parrilladas', foto: 'parrillada-platter', ancho: 300 },
+  { id: 'seafood', foto: 'shrimp-cocktail', ancho: 220 },
+  { id: 'soups-salads', foto: 'menudo', ancho: 230 },
+].map((x) => {
+  const c = cats.find((c) => c.id === x.id)!;
+  return { c, img: foto(x.foto)!, ancho: x.ancho };
+});
+const bar = cats.filter((c) => c.data.seccion === 'bar' && c.id !== 'soft-drinks');
+
+// Brasas: posiciones y ritmos fijos (pseudoaleatorios) para que la página sea siempre igual.
+let semilla = 11;
+const azar = () => (semilla = (semilla * 9301 + 49297) % 233280) / 233280;
+const brasas = Array.from({ length: 14 }, () => ({
+  x: (4 + azar() * 92).toFixed(1),
+  t: (11 + azar() * 9).toFixed(1),
+  d: (-azar() * 18).toFixed(1),
+  s: (1.6 + azar() * 2.4).toFixed(1),
+  dx: Math.round((azar() - 0.5) * 90),
+}));
+
+const unidades = [
+  { id: 'd', texto: 'Days' },
+  { id: 'h', texto: 'Hours' },
+  { id: 'm', texto: 'Minutes' },
+  { id: 's', texto: 'Seconds' },
+];
+const numeroCalle = NEGOCIO.direccion.calle.split(' ')[0];
+---
+
+<Base
+  titulo={`${t.nombre_corto} Special · ${NEGOCIO.nombre}`}
+  descripcion={`${t.subtitulo} at ${NEGOCIO.nombre} in Leon Valley, TX. ${t.bajada} Until ${t.finTexto} (${t.nombreZona}).`}
+  actual="temporada"
+  tema={nocturna ? 'halloween' : 'principal'}
+  clase="pagina-temporada"
+>
+  <!-- ── Portada: la noche, la luna y el jinete; el contador forma parte de la composición ── -->
+  <section class:list={['noche', { 'noche--sin-escena': !nocturna }]} aria-labelledby="noche-titulo" data-noche>
+    <div class="noche__cielo" aria-hidden="true">
+      <span class="noche__luz" data-capa="luz"></span>
+      <span class="noche__resplandor" data-capa="resplandor"></span>
+      {
+        nocturna && (
+          <span class="noche__brasas">
+            {brasas.map((b) => (
+              <span class="brasa" style={`--x:${b.x}%;--t:${b.t}s;--d:${b.d}s;--s:${b.s}px;--dx:${b.dx}px`} />
+            ))}
+          </span>
+        )
+      }
+    </div>
+
+    {
+      nocturna && (
+        <div class="noche__escena" aria-hidden="true">
+          <span class="noche__luna" data-capa="luna" />
+          <svg class="noche__colina noche__colina--lejos" data-capa="lejos" viewBox="0 0 1000 400" preserveAspectRatio="none">
+            <path d="M0 400C140 330 330 262 560 238 720 220 860 186 1000 196V400Z" />
+          </svg>
+          <span class="noche__bruma" />
+          <div class="noche__cerca" data-capa="cerca">
+            <svg class="noche__colina noche__colina--cerca" viewBox="0 0 1000 400" preserveAspectRatio="none">
+              <path d="M0 400C150 372 280 300 370 236 430 196 466 146 520 128 600 118 740 118 822 128 880 150 940 196 1000 214V400Z" />
+            </svg>
+            <Silueta class="noche__jinete" />
+          </div>
+        </div>
+      )
+    }
+
+    <div class="wrap noche__contenido">
+      <a class="noche__volver" href="/">
+        <Icono nombre="flecha-izq" /> Back to The Rodeo
+      </a>
+      <p class="kicker kicker--filete noche__aparece" style="--i:1">
+<span>{NEGOCIO.nombre}<span class="noche__lugar"> · {NEGOCIO.direccion.ciudad}, {NEGOCIO.direccion.estado}</span></span>
+      </p>
+      <h1 id="noche-titulo" class="noche__titulo">
+        <Letras texto={t.titulo_portada} class="noche__titulo-grande" />
+        <span class="noche__placa noche__aparece" style="--i:5">{t.titulo_portada_cursiva}</span>
+      </h1>
+      <p class="noche__bajada noche__aparece" style="--i:6" data-solo-vigente hidden={vigente ? undefined : true}>{t.bajada}</p>
+
+      <div class="cuenta noche__aparece" style="--i:6" data-cuenta data-solo-vigente hidden={vigente ? undefined : true} role="timer" aria-labelledby="cuenta-titulo">
+        <p class="cuenta__titulo" id="cuenta-titulo">{t.nombre_corto} ends in</p>
+        <ol class="cuenta__unidades">
+          {
+            unidades.map((u, i) => (
+              <li class="cuenta__unidad" style={`--j:${i}`}>
+                <span class="cuenta__valor" data-unidad={u.id} aria-hidden="true">
+                  <span class="cifra">–</span>
+                  <span class="cifra">–</span>
+                </span>
+                <span class="cuenta__texto">{u.texto}</span>
+              </li>
+            ))
+          }
+        </ol>
+        <p class="visually-hidden" data-cuenta-lectura></p>
+        <p class="cuenta__fin">
+          Ends <time datetime={t.finISO}>{t.finTexto}</time> · {t.nombreZona}
+        </p>
+      </div>
+
+      <div class="noche__terminada" data-solo-terminada hidden={vigente ? true : undefined}>
+        <p class="noche__terminada-titulo">{t.mensaje_final}</p>
+        <p>{t.mensaje_final_detalle}</p>
+      </div>
+
+      <div class="noche__acciones noche__aparece" style="--i:8">
+        <a class="btn" href="#specials" data-solo-vigente hidden={vigente ? undefined : true} data-sin-puerta>
+          Explore the specials <Icono nombre="flecha" />
+        </a>
+        <a class="btn" href="/menu/" data-solo-terminada hidden={vigente ? true : undefined}>
+          Explore the full menu <Icono nombre="flecha" />
+        </a>
+        <a class="btn btn--ghost" href="/menu/?c=margaritas">See the bar menu</a>
+      </div>
+    </div>
+
+    <a class="noche__bajar" href="#specials" data-sin-puerta data-solo-vigente hidden={vigente ? undefined : true} aria-label="Go to the Halloween specials">
+      <span>Scroll</span>
+    </a>
+  </section>
+
+  <!-- ── 01 · Halloween Specials ── -->
+  <section class="bloque especiales" id="specials" aria-labelledby="especiales-titulo" data-solo-vigente hidden={vigente ? undefined : true}>
+    <div class="wrap bloque__rejilla">
+      <header class="bloque__cabeza">
+        <p class="indice" data-revela="tira"><span class="serif">01</span> Seasonal lineup</p>
+        <h2 id="especiales-titulo" class="bloque__titulo" data-revela="sube">
+          <span class="display">{t.subtitulo.split(' ')[0]}</span>
+          <span class="serif">{t.subtitulo.split(' ').slice(1).join(' ')}</span>
+        </h2>
+      </header>
+
+      {
+        especiales.length ? (
+          <ol class="especiales__lista">
+            {especiales.map((p, i) => (
+              <li class="especial" data-revela="sube" style={`--orden:${i}`}>
+                {p.img && <Arco img={p.img} alt={p.nombre} ancho={180} proporcion={1.3} profundidad={0} recorte={0} class="especial__foto" />}
+                <div class="especial__texto">
+                  <p class="especial__tipo">
+                    <span class="serif">{p.n}</span> {TIPO[p.tipo]}
+                  </p>
+                  <h3 class="especial__nombre">{p.nombre}</h3>
+                  {p.descripcion && <p class="especial__desc">{p.descripcion}</p>}
+                </div>
+                {p.precio !== undefined && <p class="especial__precio">{precio(p.precio)}</p>}
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <div class="pendiente" data-revela="sube" style="--orden:1">
+            <p class="pendiente__frase">The lineup is on its way.</p>
+            <p class="pendiente__texto">{t.sin_productos}</p>
+            <div class="pendiente__acciones">
+              <a class="btn" href={TEL_HREF}>
+                <Icono nombre="telefono" /> {NEGOCIO.telefono.visible}
+              </a>
+              <a class="enlace" href="/menu/?c=margaritas">
+                Today’s bar menu <Icono nombre="flecha" />
+              </a>
+            </div>
+          </div>
+        )
+      }
+    </div>
+  </section>
+
+  {
+    bebidas.length > 0 && (
+      <section class="bloque bebidas" id="drinks" aria-labelledby="bebidas-titulo" data-solo-vigente hidden={vigente ? undefined : true}>
+        <div class="wrap">
+          <header class="bloque__cabeza bloque__cabeza--centro">
+            <p class="indice" data-revela="tira">
+              <span class="serif">✦</span> Featured
+            </p>
+            <h2 id="bebidas-titulo" class="bloque__titulo" data-revela="sube">
+              <span class="display">Featured</span>
+              <span class="serif">drinks</span>
+            </h2>
+          </header>
+          <ul class="bebidas__lista">
+            {bebidas.map((b, i) => (
+              <li class="bebida" style={`--orden:${i}`} data-paralaje={[0.04, -0.03, 0.06][i % 3]}>
+                <Arco img={b.img!} alt={b.nombre} ancho={i === 0 ? 300 : 220} proporcion={1.35} recorte={0} />
+                <p class="bebida__nombre serif" data-revela="sube">{b.nombre}</p>
+                {b.precio !== undefined && <p class="bebida__precio">{precio(b.precio)}</p>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- ── 02 · The Halloween Experience ── -->
+  <section class="bloque experiencia" id="experience" aria-labelledby="experiencia-titulo">
+    <div class="wrap experiencia__rejilla">
+      <header class="bloque__cabeza">
+        <p class="indice" data-revela="tira"><span class="serif">02</span> At the table</p>
+        <h2 id="experiencia-titulo" class="bloque__titulo" data-revela="sube">
+          <span class="serif">The {t.nombre_corto}</span>
+          <span class="display">Experience</span>
+        </h2>
+        <p class="experiencia__frase" data-revela="sube" style="--orden:1">A little mystery, a lot of flavor.</p>
+        <p class="experiencia__texto" data-revela="sube" style="--orden:2">
+          This season’s specials share the table with the full Rodeo menu — sizzling parrilladas, seafood, soups and
+          plates from the grill, with margaritas and cocktails from the bar.
+        </p>
+        <ul class="experiencia__bar" data-revela="sube" style="--orden:3" aria-label="From the bar">
+          {
+            bar.map((c) => (
+              <li>
+                <a href={`/menu/?c=${c.id}`}>{c.data.corto}</a>
+              </li>
+            ))
+          }
+        </ul>
+      </header>
+
+      <ul class="experiencia__fotos">
+        {
+          experiencia.map(({ c, img, ancho }, i) => (
+            <li class={`experiencia__foto experiencia__foto--${i + 1}`}>
+              <a href={`/menu/?c=${c.id}`}>
+                <Arco img={img} alt={c.data.foto_alt ?? `${c.data.nombre} at ${NEGOCIO.nombre}`} ancho={ancho} proporcion={1.3} />
+                <span class="experiencia__pie" data-revela="sube" style={`--orden:${i}`}>
+                  <span class="serif">{c.data.nombre}</span>
+                  <small>From our menu</small>
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <!-- ── 03 · Visit The Rodeo ── -->
+  <section class="bloque visita-noche" id="visit" aria-labelledby="visita-noche-titulo">
+    <p class="visita-noche__numero" aria-hidden="true" data-paralaje="0.06">{numeroCalle}</p>
+    <div class="wrap visita-noche__rejilla">
+      <header class="bloque__cabeza">
+        <p class="indice" data-revela="tira"><span class="serif">03</span> Find us</p>
+        <h2 id="visita-noche-titulo" class="bloque__titulo" data-revela="sube">
+          <span class="serif">Visit</span>
+          <span class="display">The Rodeo</span>
+        </h2>
+      </header>
+
+      <div class="visita-noche__datos" data-revela="sube" style="--orden:1">
+        <address class="visita-noche__direccion">
+          {NEGOCIO.direccion.calle}<br />
+          {NEGOCIO.direccion.ciudad}, {NEGOCIO.direccion.estado} {NEGOCIO.direccion.cp}
+        </address>
+        <dl class="visita-noche__lista">
+          <div>
+            <dt>Phone</dt>
+            <dd><a href={TEL_HREF}>{NEGOCIO.telefono.visible}</a></dd>
+          </div>
+          <div>
+            <dt>Hours</dt>
+            <dd>
+              {
+                NEGOCIO.horario?.length ? (
+                  NEGOCIO.horario.map((h) => (
+                    <span class="visita-noche__horario">
+                      {h.dias} · {h.horas}
+                    </span>
+                  ))
+                ) : (
+                  <span>Please call for today’s hours.</span>
+                )
+              }
+            </dd>
+          </div>
+          <div>
+            <dt>Instagram</dt>
+            <dd>
+              <a href={NEGOCIO.instagram.url} target="_blank" rel="noopener">@{NEGOCIO.instagram.usuario}</a>
+            </dd>
+          </div>
+        </dl>
+        <div class="visita-noche__acciones">
+          <a class="btn" href={MAPAS.google} target="_blank" rel="noopener">
+            <Icono nombre="mapa" /> Directions
+          </a>
+          <a class="btn btn--ghost" href={TEL_HREF}>
+            <Icono nombre="telefono" /> Call us
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Cierre ── -->
+  <section class="cierre" aria-labelledby="cierre-titulo">
+    <svg class="cierre__luna" viewBox="0 0 200 200" aria-hidden="true">
+      <path d="M150 156A78 78 0 1 1 82 34a62 62 0 0 0 68 122z" />
+    </svg>
+    <div class="wrap cierre__contenido">
+      <p class="kicker cierre__kicker" data-solo-vigente hidden={vigente ? undefined : true} data-revela="tira">
+        Until {t.finTexto} · {t.nombreZona}
+      </p>
+      <h2 id="cierre-titulo" class="cierre__titulo" data-revela="sube">
+        <span class="serif">See you</span>
+        <span class="display">at The Rodeo</span>
+      </h2>
+      <p class="cierre__cuenta" data-solo-vigente hidden={vigente ? undefined : true} data-revela="sube" style="--orden:1">
+        <Icono nombre="reloj" />
+        <span data-cuenta-corta>Until {t.finCorto}</span>
+      </p>
+      <div class="cierre__acciones" data-revela="sube" style="--orden:2">
+        <a class="btn" href="#specials" data-solo-vigente hidden={vigente ? undefined : true} data-sin-puerta>
+          See the specials <Icono nombre="flecha" />
+        </a>
+        <a class="btn btn--ghost" href="/menu/">Back to the main menu</a>
+      </div>
+      <a class="enlace cierre__volver" href="/" data-revela="sube" style="--orden:3">
+        <Icono nombre="flecha-izq" /> Return to The Rodeo home
+      </a>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { iniciarHalloween } from '../../scripts/halloween';
+  iniciarHalloween();
+</script>
+
+<style>
+  /* ═════════ Portada ═════════ */
+  .noche {
+    --retraso: 0.1s;
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    min-height: calc(100svh - var(--dock-h) - var(--safe-b));
+    /* El cielo sigue por detrás de la cabecera translúcida. */
+    margin-top: calc(var(--header-h) * -1);
+    padding-top: var(--header-h);
+    overflow: hidden;
+  }
+
+  :global(html.con-puerta) .noche {
+    --retraso: 0.45s;
+  }
+
+  /* El cielo se apaga hacia abajo hasta el color de la página: no hay corte con la sección siguiente. */
+  .noche::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    height: 22%;
+    z-index: -1;
+    background: linear-gradient(to bottom, transparent, var(--fondo));
+    pointer-events: none;
+  }
+
+  .noche__cielo {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  /* Luz morada que se desplaza despacio por el fondo. */
+  .noche__luz {
+    position: absolute;
+    left: -35vmax;
+    top: -45vmax;
+    width: 120vmax;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgb(122 79 168 / 0.42), rgb(75 36 112 / 0.18) 55%, transparent);
+  }
+
+  /* Resplandor naranja muy tenue detrás del título. */
+  .noche__resplandor {
+    position: absolute;
+    left: -18vw;
+    top: 18%;
+    width: min(90vw, 980px);
+    aspect-ratio: 1.3;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgb(217 105 42 / 0.2), rgb(180 79 28 / 0.08) 50%, transparent);
+  }
+
+  .noche__brasas {
+    position: absolute;
+    inset: 0;
+  }
+
+  .brasa {
+    position: absolute;
+    bottom: -8px;
+    left: var(--x);
+    width: var(--s);
+    height: var(--s);
+    border-radius: 50%;
+    background: #e8843f;
+    box-shadow: 0 0 6px 1px rgb(217 105 42 / 0.65);
+    opacity: 0;
+  }
+
+  /* ── Escena: luna, colinas, bruma y jinete ── */
+  .noche__escena {
+    position: relative;
+    height: clamp(230px, 40svh, 420px);
+    margin-bottom: -48px;
+    pointer-events: none;
+  }
+
+  .noche__luna {
+    position: absolute;
+    right: 6%;
+    top: 4%;
+    width: min(62vw, 330px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    /* Luna de cosecha: tibia abajo, con mares apenas insinuados (sin cráteres de caricatura). */
+    background:
+      linear-gradient(to top, rgb(217 105 42 / 0.26), transparent 55%),
+      radial-gradient(circle at 30% 30%, rgb(255 255 255 / 0.32), transparent 42%),
+      radial-gradient(38% 30% at 62% 40%, rgb(176 150 112 / 0.2), transparent 70%),
+      radial-gradient(24% 20% at 38% 64%, rgb(176 150 112 / 0.16), transparent 70%),
+      radial-gradient(18% 16% at 72% 68%, rgb(176 150 112 / 0.14), transparent 70%),
+      radial-gradient(circle, #efe3cc 0 50%, #dfcaa6 76%, var(--n-luna-sombra));
+    box-shadow:
+      0 0 60px 10px rgb(239 214 170 / 0.16),
+      0 0 180px 50px rgb(217 105 42 / 0.12);
+  }
+
+  .noche__colina {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 52%;
+  }
+
+  .noche__colina--lejos path {
+    fill: #1e1030;
+  }
+
+  .noche__cerca {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* En el teléfono la colina sigue por debajo del texto y se disuelve en el cielo. */
+  .noche__cerca::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% - 1px);
+    height: 140px;
+    background: linear-gradient(var(--fondo), transparent);
+  }
+
+  /* La colina cercana y el jinete son del color del fondo: la portada se funde con la página. */
+  .noche__colina--cerca path {
+    fill: var(--fondo);
+  }
+
+  /* El jinete está sobre la meseta de la colina cercana, delante de la luna. */
+  .noche__cerca :global(.noche__jinete) {
+    position: absolute;
+    left: 50%;
+    width: 30%;
+    /* Meseta: y = 118 de 400 en el dibujo (70 % del alto contado desde abajo); se hunde un poco. */
+    bottom: calc(52% * 0.7 - 3%);
+    color: var(--fondo);
+  }
+
+  .noche__bruma {
+    position: absolute;
+    left: -30%;
+    bottom: 0;
+    width: 160%;
+    height: 46%;
+    background:
+      radial-gradient(40% 60% at 30% 100%, rgb(185 169 196 / 0.12), transparent 70%),
+      radial-gradient(35% 50% at 75% 100%, rgb(185 169 196 / 0.09), transparent 70%);
+  }
+
+  /* ── Contenido ── */
+  .noche__contenido {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    align-content: center;
+    justify-items: start;
+    gap: clamp(12px, 2.2svh, 24px);
+    padding-block: 0 88px;
+    container-type: inline-size;
+  }
+
+  .noche__volver {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 0.86rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--texto-suave);
+    transition: color var(--t-fast);
+  }
+
+  .noche__volver :global(svg) {
+    width: 17px;
+    height: 17px;
+    transition: transform var(--t-base) var(--ease-out);
+  }
+
+  @media (hover: hover) {
+    .noche__volver:hover {
+      color: var(--texto);
+    }
+
+    .noche__volver:hover :global(svg) {
+      transform: translateX(-4px);
+    }
+  }
+
+  .noche__titulo {
+    display: grid;
+    justify-items: start;
+    line-height: 0.84;
+    margin-top: 2px;
+  }
+
+  /* "Halloween": serif editorial grande, iluminada desde atrás por el resplandor. */
+  .noche__titulo :global(.noche__titulo-grande) {
+    font-family: var(--f-serif);
+    font-weight: 400;
+    font-size: clamp(3.6rem, 22cqi, 11.5rem);
+    letter-spacing: -0.025em;
+    color: var(--n-luna);
+    text-shadow: 0 0 0.45em rgb(217 105 42 / 0.28);
+  }
+
+  .noche__titulo :global(.letra) {
+    transform-origin: 50% 100%;
+  }
+
+  /* "Special": letrero de madera en naranja, entre filetes, como la placa del sitio principal. */
+  .noche__placa {
+    display: flex;
+    align-items: center;
+    gap: 0.7em;
+    width: 100%;
+    margin-top: 0.4em;
+    font-family: var(--f-display);
+    font-size: clamp(1.05rem, 4.2cqi, 1.9rem);
+    letter-spacing: 0.42em;
+    text-transform: uppercase;
+    color: var(--n-naranja);
+  }
+
+  .noche__placa::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--n-naranja), transparent);
+  }
+
+  .noche__bajada {
+    max-width: 40ch;
+    color: var(--texto-suave);
+    font-size: clamp(1rem, 3.8cqi, 1.18rem);
+    line-height: 1.5;
+  }
+
+  /* ── Contador transparente: sin caja ni fondo; filetes finos entre unidades ── */
+  .cuenta {
+    display: grid;
+    gap: 12px;
+    margin-top: 4px;
+  }
+
+  .cuenta__titulo {
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 0.82rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--texto-suave);
+  }
+
+  .cuenta__unidades {
+    display: grid;
+    grid-template-columns: repeat(4, auto);
+    justify-content: start;
+  }
+
+  /* Sin JavaScript no hay cifras que mostrar: queda la fecha de fin, que sí es exacta. */
+  :global(html:not(.js)) .cuenta__unidades,
+  :global(html:not(.js)) .cuenta__titulo {
+    display: none;
+  }
+
+  .cuenta__unidad {
+    display: grid;
+    justify-items: start;
+    gap: 8px;
+    padding-inline: clamp(12px, 3.4cqi, 34px);
+    border-left: 1px solid rgb(217 105 42 / 0.38);
+  }
+
+  .cuenta__unidad:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .cuenta__valor {
+    display: flex;
+    font-family: var(--f-serif);
+    font-size: clamp(2.5rem, 11cqi, 5.4rem);
+    line-height: 0.9;
+    color: var(--n-luna);
+    font-variant-numeric: lining-nums;
+  }
+
+  /* Ancho fijo por cifra: los números no bailan al cambiar. */
+  .cifra {
+    display: inline-block;
+    width: 0.56em;
+    text-align: center;
+  }
+
+  :global(.cifra--cambia) {
+    animation: cifra-cae 0.55s var(--ease-out);
+  }
+
+  .cuenta__texto {
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 0.74rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--n-naranja);
+  }
+
+  .cuenta__fin {
+    font-size: 0.92rem;
+    color: var(--texto-suave);
+  }
+
+  .cuenta__fin time {
+    color: var(--texto);
+  }
+
+  @keyframes cifra-cae {
+    from {
+      opacity: 0.15;
+      transform: translateY(-0.28em);
+    }
+  }
+
+  .noche__terminada {
+    display: grid;
+    gap: 8px;
+    max-width: 46ch;
+    padding-left: 18px;
+    border-left: 1px solid var(--n-naranja);
+    color: var(--texto-suave);
+  }
+
+  .noche__terminada-titulo {
+    font-family: var(--f-serif);
+    font-style: italic;
+    font-size: clamp(2rem, 8cqi, 3.4rem);
+    line-height: 1;
+    color: var(--texto);
+  }
+
+  .noche__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  /* Indicación de desplazamiento: una línea que baja despacio. */
+  .noche__bajar {
+    position: absolute;
+    left: var(--gutter);
+    bottom: 22px;
+    z-index: 2;
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+    padding: 6px 4px;
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--texto-suave);
+    writing-mode: vertical-rl;
+  }
+
+  .noche__bajar::after {
+    content: '';
+    width: 1px;
+    height: 42px;
+    background: linear-gradient(var(--n-naranja), transparent);
+    transform-origin: 50% 0;
+  }
+
+  /* ── Movimiento de la portada: lento y atmosférico ── */
+  :global(html[data-motion='on']) .noche__luz {
+    animation: luz-deriva 30s ease-in-out infinite alternate;
+  }
+
+  :global(html[data-motion='on']) .noche__resplandor {
+    animation:
+      resplandor-aparece 2.6s ease-out var(--retraso) backwards,
+      resplandor-respira 9s ease-in-out calc(var(--retraso) + 2.6s) infinite alternate;
+  }
+
+  :global(html[data-motion='on']) .brasa {
+    animation: brasa-sube var(--t) linear var(--d) infinite;
+  }
+
+  :global(html[data-motion='on']) .noche__luna {
+    animation:
+      luna-sale 2.4s cubic-bezier(0.16, 1, 0.3, 1) var(--retraso) backwards,
+      luna-brilla 8s ease-in-out calc(var(--retraso) + 2.4s) infinite alternate;
+  }
+
+  :global(html[data-motion='on']) .noche__cerca {
+    animation: sube-suave 1.8s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--retraso) + 0.3s) backwards;
+  }
+
+  :global(html[data-motion='on']) .noche__bruma {
+    animation: bruma-deriva 44s ease-in-out infinite alternate;
+  }
+
+  :global(html[data-motion='on']) .noche__titulo :global(.letra) {
+    animation: letra-surge 1.3s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation-delay: calc(var(--retraso) + 0.25s + var(--i) * 60ms);
+  }
+
+  :global(html[data-motion='on']) .noche__aparece {
+    animation: aparece 1.1s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation-delay: calc(var(--retraso) + var(--i) * 110ms);
+  }
+
+  :global(html[data-motion='on']) .cuenta__unidad {
+    animation: aparece 1.1s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation-delay: calc(var(--retraso) + 0.72s + var(--j) * 90ms);
+  }
+
+  :global(html[data-motion='on']) .noche__bajar::after {
+    animation: linea-baja 2.8s ease-in-out infinite;
+  }
+
+  /* Fuera de pantalla, la atmósfera se detiene (scripts/halloween.ts). */
+  :global(.noche--quieta) .noche__luz,
+  :global(.noche--quieta) .noche__resplandor,
+  :global(.noche--quieta) .brasa,
+  :global(.noche--quieta) .noche__luna,
+  :global(.noche--quieta) .noche__bruma,
+  :global(.noche--quieta) .noche__bajar::after {
+    animation-play-state: paused;
+  }
+
+  @keyframes luz-deriva {
+    to {
+      transform: translate(38vw, 16vh);
+    }
+  }
+
+  @keyframes resplandor-aparece {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes resplandor-respira {
+    to {
+      opacity: 0.65;
+    }
+  }
+
+  @keyframes brasa-sube {
+    0% {
+      opacity: 0;
+      transform: translate(0, 0);
+    }
+    15% {
+      opacity: 0.85;
+    }
+    70% {
+      opacity: 0.45;
+    }
+    100% {
+      opacity: 0;
+      transform: translate(var(--dx), -62svh);
+    }
+  }
+
+  @keyframes luna-sale {
+    from {
+      opacity: 0;
+      transform: translateY(9%);
+    }
+  }
+
+  @keyframes luna-brilla {
+    to {
+      box-shadow:
+        0 0 80px 16px rgb(239 214 170 / 0.22),
+        0 0 220px 70px rgb(217 105 42 / 0.17);
+    }
+  }
+
+  @keyframes sube-suave {
+    from {
+      opacity: 0;
+      transform: translateY(6%);
+    }
+  }
+
+  @keyframes bruma-deriva {
+    to {
+      transform: translateX(14%);
+    }
+  }
+
+  /* Empieza en 0.01 y no en 0: visualmente es igual, pero el navegador cuenta el título (el
+     elemento principal de la portada) como pintado desde el primer cuadro y el LCP no se retrasa. */
+  @keyframes letra-surge {
+    from {
+      opacity: 0.01;
+      transform: translateY(32%);
+    }
+  }
+
+  @keyframes aparece {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+  }
+
+  @keyframes linea-baja {
+    0% {
+      transform: scaleY(0);
+      transform-origin: 50% 0;
+    }
+    50% {
+      transform: scaleY(1);
+      transform-origin: 50% 0;
+    }
+    51% {
+      transform-origin: 50% 100%;
+    }
+    100% {
+      transform: scaleY(0);
+      transform-origin: 50% 100%;
+    }
+  }
+
+  /* Teléfono: menos brasas y contador en dos filas si el ancho no alcanza. */
+  @media (max-width: 899px) {
+    .brasa:nth-child(n + 7) {
+      display: none;
+    }
+
+    .noche__lugar {
+      display: none;
+    }
+
+    .noche__bajar {
+      display: none;
+    }
+  }
+
+  @media (max-width: 359px) {
+    .cuenta__unidades {
+      grid-template-columns: repeat(2, auto);
+      row-gap: 14px;
+    }
+
+    .cuenta__unidad:nth-child(3) {
+      padding-left: 0;
+      border-left: 0;
+    }
+  }
+
+  @media (min-width: 900px) {
+    .noche {
+      grid-template-rows: 1fr;
+      align-items: center;
+    }
+
+    .noche__escena {
+      position: absolute;
+      inset: 0 0 0 40%;
+      height: auto;
+      margin: 0;
+      z-index: -1;
+    }
+
+    .noche__cerca::after {
+      display: none;
+    }
+
+    .noche__luna {
+      right: 7%;
+      top: 15%;
+      width: min(36vw, 520px);
+    }
+
+    .noche__colina {
+      height: 44%;
+    }
+
+    .noche__cerca :global(.noche__jinete) {
+      bottom: calc(44% * 0.7 - 3%);
+    }
+
+    .noche__contenido {
+      grid-row: 1;
+      grid-column: 1;
+      padding-block: 40px 96px;
+    }
+
+    .noche__contenido > * {
+      max-width: min(720px, 58vw);
+    }
+
+    .noche__titulo :global(.noche__titulo-grande) {
+      font-size: clamp(5rem, 11vw, 11rem);
+    }
+
+    .noche__placa {
+      font-size: clamp(1.2rem, 1.8vw, 1.9rem);
+    }
+
+    .noche__bajada {
+      font-size: 1.15rem;
+    }
+
+    .cuenta__unidad {
+      padding-inline: clamp(18px, 2.4vw, 40px);
+    }
+
+    .cuenta__valor {
+      font-size: clamp(3.4rem, 5.4vw, 5.6rem);
+    }
+  }
+
+  /* ═════════ Secciones ═════════ */
+  .bloque {
+    position: relative;
+    padding-block: clamp(64px, 8vw, 112px);
+  }
+
+  .bloque__cabeza {
+    display: grid;
+    justify-items: start;
+    align-content: start;
+    gap: 16px;
+    container-type: inline-size;
+  }
+
+  .bloque__cabeza--centro {
+    justify-items: center;
+    text-align: center;
+  }
+
+  .indice {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 12px;
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 0.82rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--texto-suave);
+  }
+
+  .indice .serif {
+    font-size: 2rem;
+    letter-spacing: 0;
+    color: var(--n-naranja);
+  }
+
+  .bloque__titulo {
+    display: grid;
+    line-height: 0.88;
+  }
+
+  /* 12.5cqi: "HALLOWEEN" o "EXPERIENCE" caben en su columna a cualquier ancho. */
+  .bloque__titulo .display {
+    font-size: clamp(2rem, 12.5cqi, 5.6rem);
+  }
+
+  .bloque__titulo .serif {
+    font-size: clamp(2.6rem, 16cqi, 6rem);
+    color: var(--n-naranja);
+  }
+
+  .bloque__rejilla {
+    display: grid;
+    gap: clamp(32px, 6vw, 72px);
+  }
+
+  /* ── 01 Especiales ── */
+  .pendiente {
+    display: grid;
+    gap: 18px;
+    align-content: center;
+    padding: clamp(24px, 4vw, 48px) 0 clamp(24px, 4vw, 48px) clamp(20px, 4vw, 48px);
+    border-left: 1px solid rgb(217 105 42 / 0.5);
+  }
+
+  .pendiente__frase {
+    font-family: var(--f-serif);
+    font-style: italic;
+    font-size: clamp(2.2rem, 6vw, 4.2rem);
+    line-height: 1;
+    color: var(--texto);
+  }
+
+  .pendiente__texto {
+    max-width: 48ch;
+    font-size: 1.08rem;
+    color: var(--texto-suave);
+  }
+
+  .pendiente__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px 24px;
+  }
+
+  .especiales__lista {
+    display: grid;
+    border-top: 1px solid var(--linea);
+  }
+
+  .especial {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px 28px;
+    padding-block: 26px;
+    border-bottom: 1px solid var(--linea);
+  }
+
+  .especial :global(.especial__foto) {
+    grid-column: 1 / -1;
+  }
+
+  .especial__tipo {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--texto-suave);
+  }
+
+  .especial__tipo .serif {
+    font-size: 1.5rem;
+    letter-spacing: 0;
+    color: var(--n-naranja);
+  }
+
+  .especial__nombre {
+    margin-top: 4px;
+    font-family: var(--f-display);
+    font-weight: 400;
+    font-size: clamp(1.5rem, 4vw, 2.4rem);
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .especial__desc {
+    margin-top: 8px;
+    max-width: 52ch;
+    color: var(--texto-suave);
+  }
+
+  .especial__precio {
+    align-self: start;
+    font-family: var(--f-serif);
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    color: var(--n-naranja);
+  }
+
+  /* Con foto: arco a la izquierda, en una columna de ancho fijo (un arco no tiene ancho propio). */
+  @media (min-width: 700px) {
+    .especial {
+      grid-template-columns: clamp(110px, 12vw, 160px) minmax(0, 1fr) auto;
+    }
+
+    .especial :global(.especial__foto) {
+      grid-column: 1;
+    }
+
+    .especial:not(:has(:global(.especial__foto))) .especial__texto {
+      grid-column: 1 / 3;
+    }
+  }
+
+  @media (min-width: 900px) {
+    .bloque__rejilla {
+      grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.6fr);
+      align-items: start;
+    }
+  }
+
+  /* ── Bebidas destacadas ── */
+  .bebidas__lista {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 40px clamp(24px, 5vw, 64px);
+    margin-top: clamp(36px, 6vw, 64px);
+  }
+
+  .bebida {
+    display: grid;
+    justify-items: center;
+    gap: 10px;
+    text-align: center;
+  }
+
+  .bebida:nth-child(even) {
+    margin-bottom: 56px;
+  }
+
+  .bebida__nombre {
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    line-height: 1;
+  }
+
+  .bebida__precio {
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: 0.12em;
+    color: var(--n-naranja);
+  }
+
+  /* ── 02 Experiencia: fotos reales con la luz de la noche ── */
+  .experiencia {
+    background:
+      radial-gradient(50% 45% at 80% 50%, rgb(75 36 112 / 0.45), transparent),
+      radial-gradient(30% 30% at 12% 62%, rgb(180 79 28 / 0.1), transparent);
+  }
+
+  .experiencia__rejilla {
+    display: grid;
+    gap: clamp(40px, 7vw, 80px);
+  }
+
+  .experiencia__frase {
+    font-family: var(--f-serif);
+    font-style: italic;
+    font-size: clamp(1.7rem, 4vw, 2.5rem);
+    line-height: 1.1;
+    color: var(--texto);
+  }
+
+  .experiencia__texto {
+    max-width: 46ch;
+    font-size: 1.05rem;
+    color: var(--texto-suave);
+  }
+
+  .experiencia__bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .experiencia__bar a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 14px;
+    border: 1px solid var(--linea-fuerte);
+    border-radius: var(--radius);
+    font-family: var(--f-label);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition:
+      border-color var(--t-fast),
+      color var(--t-fast),
+      background-color var(--t-fast);
+  }
+
+  @media (hover: hover) {
+    .experiencia__bar a:hover {
+      border-color: var(--n-naranja);
+      background: var(--n-naranja);
+      color: var(--n-carbon);
+    }
+  }
+
+  .experiencia__fotos {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px 16px;
+    align-items: start;
+  }
+
+  .experiencia__foto a {
+    display: grid;
+    justify-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .experiencia__foto--1 {
+    grid-column: 1 / -1;
+  }
+
+  .experiencia__foto--3 {
+    margin-top: 64px;
+  }
+
+  /* Luz de noche sobre la foto: viñeta morada y filo naranja, sin cambiar el color del plato. */
+  .experiencia__foto :global(.arco__marco) {
+    box-shadow:
+      0 0 0 5px var(--fondo),
+      0 0 0 6px rgb(217 105 42 / 0.55),
+      0 30px 70px -30px rgb(217 105 42 / 0.45);
+  }
+
+  .experiencia__foto :global(.arco__marco)::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(110% 80% at 50% 35%, transparent 45%, rgb(18 10 26 / 0.6));
+  }
+
+  .experiencia__pie {
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    text-align: center;
+  }
+
+  .experiencia__pie .serif {
+    font-size: 1.6rem;
+    line-height: 1.05;
+  }
+
+  .experiencia__pie small {
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--texto-suave);
+  }
+
+  @media (min-width: 900px) {
+    .experiencia__rejilla {
+      grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.5fr);
+      align-items: center;
+    }
+
+    .experiencia__fotos {
+      grid-template-columns: 1.3fr 1fr;
+      grid-template-rows: auto auto;
+    }
+
+    .experiencia__foto--1 {
+      grid-column: 1;
+      grid-row: 1 / span 2;
+      align-self: center;
+    }
+
+    .experiencia__foto--2 {
+      grid-column: 2;
+    }
+
+    .experiencia__foto--3 {
+      grid-column: 2;
+      margin-top: 24px;
+      transform: translateX(-28%);
+    }
+  }
+
+  /* ── 03 Visítenos ── */
+  .visita-noche {
+    overflow: hidden;
+    border-top: 1px solid var(--linea);
+  }
+
+  /* El número de la calle, gigante y en contorno, como un cartel en la noche. */
+  .visita-noche__numero {
+    position: absolute;
+    right: -3vw;
+    bottom: -0.3em;
+    z-index: -1;
+    font-family: var(--f-display);
+    font-size: clamp(8rem, 24vw, 21rem);
+    line-height: 0.8;
+    color: transparent;
+    -webkit-text-stroke: 1px rgb(217 105 42 / 0.2);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .visita-noche__rejilla {
+    display: grid;
+    gap: clamp(32px, 6vw, 64px);
+  }
+
+  .visita-noche__datos {
+    display: grid;
+    gap: 26px;
+    align-content: start;
+  }
+
+  .visita-noche__direccion {
+    font-style: normal;
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: clamp(1.6rem, 5vw, 2.6rem);
+    line-height: 1.1;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .visita-noche__lista {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+    padding-top: 20px;
+    border-top: 1px solid var(--linea);
+  }
+
+  .visita-noche__lista > div {
+    display: grid;
+    grid-template-columns: 120px minmax(0, 1fr);
+    gap: 12px;
+    align-items: baseline;
+  }
+
+  .visita-noche__lista dt {
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--n-naranja);
+  }
+
+  .visita-noche__lista dd {
+    margin: 0;
+    font-size: 1.08rem;
+  }
+
+  .visita-noche__lista a {
+    display: inline-block;
+    padding-block: 8px;
+    margin-block: -8px;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+  }
+
+  .visita-noche__horario {
+    display: block;
+  }
+
+  .visita-noche__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  @media (min-width: 900px) {
+    .visita-noche__rejilla {
+      grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.6fr);
+    }
+  }
+
+  /* ═════════ Cierre ═════════ */
+  .cierre {
+    position: relative;
+    overflow: hidden;
+    padding-block: clamp(96px, 16vw, 200px);
+    text-align: center;
+    background:
+      radial-gradient(50% 60% at 50% 100%, rgb(217 105 42 / 0.16), transparent 70%),
+      radial-gradient(70% 70% at 50% 0%, rgb(75 36 112 / 0.5), transparent 70%);
+    border-top: 1px solid var(--linea);
+  }
+
+  .cierre__luna {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: min(90vw, 620px);
+    translate: -50% -50%;
+    fill: none;
+    stroke: rgb(217 105 42 / 0.35);
+    stroke-width: 0.6;
+    pointer-events: none;
+  }
+
+  .cierre__contenido {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: 20px;
+    container-type: inline-size;
+  }
+
+  .cierre__titulo {
+    display: grid;
+    line-height: 0.86;
+  }
+
+  .cierre__titulo .serif {
+    font-size: clamp(2.8rem, 12cqi, 7rem);
+    color: var(--n-naranja);
+  }
+
+  .cierre__titulo .display {
+    font-size: clamp(2.2rem, 9.5cqi, 6rem);
+  }
+
+  .cierre__cuenta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--texto-suave);
+  }
+
+  .cierre__cuenta :global(svg) {
+    width: 20px;
+    height: 20px;
+    color: var(--n-naranja);
+  }
+
+  .cierre__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 6px;
+  }
+
+  .cierre__volver {
+    color: var(--texto-suave);
+  }
+</style>

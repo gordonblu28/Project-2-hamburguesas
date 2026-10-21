@@ -1,0 +1,9 @@
+# Inicio, sección "House Plates": platos con foto, en orden. Solo ids de productos.yaml.
+# Conviene elegir fotos nítidas: el sitio descarta las que no alcanzan el tamaño de la galería
+# (en la práctica, recortes de al menos ~230 px; ver "Fotos" en README.md).
+
+galeria:
+  - steak-and-shrimp
+  - pollo-feliz
+  - tacos-zacatecanos
+  - shrimp-cocktail

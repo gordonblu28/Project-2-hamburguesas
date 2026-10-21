@@ -1,0 +1,7 @@
+Fotos de las bebidas de temporada (Halloween u otra temporada).
+
+1. Guarde aquí la foto real de cada bebida (JPG, PNG o WebP), por ejemplo: pumpkin-margarita.jpg
+2. En src/data/temporada.yaml, agregue el producto con  foto: pumpkin-margarita  (sin la extensión).
+3. npm run build
+
+No use fotos de internet ni imágenes generadas como si fueran las bebidas reales del local.

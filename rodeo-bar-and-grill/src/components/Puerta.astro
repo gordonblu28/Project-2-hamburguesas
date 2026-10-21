@@ -1,0 +1,133 @@
+---
+// Transiciones entre páginas (las maneja src/scripts/puerta.ts; sin JavaScript o con movimiento
+// reducido no aparecen).
+// · Puerta de corral, dentro del sitio principal: al salir, las dos hojas de madera se cierran;
+//   en la página nueva se abren girando hacia afuera, como el cajón de salida del rodeo.
+// · Velo, al cruzar entre el sitio principal y Halloween: cae la noche (o vuelve el día) en un
+//   círculo que se abre desde donde se tocó, y en la página nueva se disuelve.
+import Silueta from './Silueta.astro';
+---
+
+<div class="puerta" aria-hidden="true">
+  <div class="puerta__hoja puerta__hoja--izq"></div>
+  <div class="puerta__hoja puerta__hoja--der"></div>
+  <div class="puerta__cerrojo">
+    <Silueta class="puerta__jinete" />
+  </div>
+</div>
+<div class="velo" aria-hidden="true"></div>
+
+<style>
+  .puerta {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    pointer-events: none;
+    perspective: 1400px;
+    visibility: hidden;
+    /* Las hojas esperan fuera de pantalla: sin esto el teléfono permitiría desplazarse de lado. */
+    overflow: hidden;
+  }
+
+  :global(html.puerta-activa) .puerta {
+    visibility: visible;
+  }
+
+  .puerta__hoja {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 50.5%;
+    background:
+      /* travesaño diagonal */
+      linear-gradient(
+        var(--diag, 62deg),
+        transparent calc(50% - 13px),
+        var(--c-negro) calc(50% - 13px) calc(50% - 11px),
+        var(--c-cuerda-oscura) calc(50% - 11px) calc(50% + 11px),
+        var(--c-negro) calc(50% + 11px) calc(50% + 13px),
+        transparent calc(50% + 13px)
+      ),
+      /* tres rieles */
+      linear-gradient(var(--c-negro), var(--c-negro)) 0 calc(14% - 2px) / 100% 2px no-repeat,
+      linear-gradient(var(--c-arena), var(--c-arena)) 0 14% / 100% 7% no-repeat,
+      linear-gradient(var(--c-negro), var(--c-negro)) 0 calc(46% - 2px) / 100% 2px no-repeat,
+      linear-gradient(var(--c-arena), var(--c-arena)) 0 46% / 100% 7% no-repeat,
+      linear-gradient(var(--c-negro), var(--c-negro)) 0 calc(78% - 2px) / 100% 2px no-repeat,
+      linear-gradient(var(--c-arena), var(--c-arena)) 0 78% / 100% 7% no-repeat,
+      /* tablas */
+      repeating-linear-gradient(90deg, var(--c-carbon) 0 46px, var(--c-negro) 46px 48px);
+    will-change: transform;
+  }
+
+  .puerta__hoja--izq {
+    left: 0;
+    transform-origin: left center;
+    border-right: 8px solid var(--c-cuerda-oscura);
+    box-shadow: inset -2px 0 0 var(--c-negro);
+    transform: translateX(-102%);
+  }
+
+  .puerta__hoja--der {
+    right: 0;
+    --diag: -62deg;
+    transform-origin: right center;
+    border-left: 8px solid var(--c-cuerda-oscura);
+    box-shadow: inset 2px 0 0 var(--c-negro);
+    transform: translateX(102%);
+  }
+
+  .puerta__cerrojo {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 88px;
+    height: 88px;
+    margin: -44px 0 0 -44px;
+    border-radius: 50%;
+    border: 2px solid var(--c-negro);
+    background: var(--c-beige);
+    box-shadow:
+      0 0 0 5px var(--c-beige),
+      0 0 0 6.5px var(--c-negro);
+    color: var(--c-negro);
+    display: grid;
+    place-items: center;
+    transform: scale(0);
+  }
+
+  .puerta__cerrojo :global(.puerta__jinete) {
+    width: 56px;
+  }
+
+  /* Estado cerrado (al llegar desde otra página, antes de abrir). */
+  :global(html.puerta-cerrada) .puerta__hoja {
+    transform: none;
+  }
+
+  :global(html.puerta-cerrada) .puerta__cerrojo {
+    transform: scale(1);
+  }
+
+  /* ── Velo entre identidades ── */
+  .velo {
+    position: fixed;
+    inset: 0;
+    z-index: 101;
+    pointer-events: none;
+    visibility: hidden;
+    background: var(--velo);
+  }
+
+  .velo[data-hacia='noche'] {
+    background: radial-gradient(70% 55% at 50% 55%, #2a1340, #120a1a 70%);
+  }
+
+  .velo[data-hacia='dia'] {
+    background: radial-gradient(70% 55% at 50% 55%, #faf6ee, #e7dcc8 70%);
+  }
+
+  :global(html.velo-activo) .velo {
+    visibility: visible;
+  }
+</style>

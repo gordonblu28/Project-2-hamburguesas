@@ -1,0 +1,6 @@
+node_modules/
+dist/
+entrega/
+.astro/
+.wrangler/
+.playwright-mcp/

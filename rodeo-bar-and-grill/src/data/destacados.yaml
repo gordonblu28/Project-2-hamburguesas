@@ -1,0 +1,14 @@
+# Página "Favorites" (/favorites/): platos que el propio menú marca como ★ Favorite o New!,
+# más platos de la casa con foto en el menú impreso. Solo ids de productos.yaml, en orden.
+# Toda la información (nombre, precio, descripción, foto) se toma de productos.yaml.
+
+- rodeo-botana
+- el-alamo-steak-plate
+- rafas-plate
+- mango-grilled-fish-fillet
+- quesabirrias
+- the-texan-parrillada
+- steak-and-shrimp
+- bryans-plate
+- tacos-zacatecanos
+- popping-boba-margaritas

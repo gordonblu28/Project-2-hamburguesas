@@ -1,0 +1,341 @@
+---
+// Pie de página real: dirección, teléfono, horario, redes y navegación, con el logo oficial.
+// Toma sus colores de los tokens --hondo*, así en Halloween se vuelve nocturno sin tocarlo.
+import { Image } from 'astro:assets';
+import logo from '../assets/marca/logo.jpg';
+import Silueta from './Silueta.astro';
+import Icono from './Icono.astro';
+import { NEGOCIO, MAPAS, TEL_HREF, TEMPORADA } from '../lib/datos';
+
+const d = NEGOCIO.direccion;
+const horario = NEGOCIO.horario ?? [];
+const anio = new Date().getFullYear();
+const enlaces = [
+  { href: '/', texto: 'Home' },
+  { href: '/menu/', texto: 'Menu' },
+  { href: '/favorites/', texto: 'Favorites' },
+  { href: '/visit/', texto: 'Visit' },
+];
+---
+
+<footer class="pie">
+  <div class="wrap pie__cabeza">
+    <a class="pie__nombre" href="/" aria-label={`${NEGOCIO.nombre} — Home`}>
+      <Silueta class="pie__jinete" />
+      <span class="display" aria-hidden="true">The Rodeo</span>
+    </a>
+    <p class="pie__lema">
+      <span class="serif">Bar &amp; Grill</span>
+      <span>{NEGOCIO.subtitulo} · {d.ciudad}, {d.estado}</span>
+    </p>
+  </div>
+
+  <div class="wrap pie__rejilla">
+    <section class="pie__bloque" aria-labelledby="pie-visita">
+      <h2 class="pie__titulo" id="pie-visita">Visit</h2>
+      <address>
+        {d.calle}<br />
+        {d.ciudad}, {d.estado} {d.cp}
+      </address>
+      <a class="pie__enlace" href={MAPAS.google} target="_blank" rel="noopener">
+        Directions <Icono nombre="flecha" />
+      </a>
+    </section>
+
+    <section class="pie__bloque" aria-labelledby="pie-llamar">
+      <h2 class="pie__titulo" id="pie-llamar">Call</h2>
+      <a class="pie__dato" href={TEL_HREF}>{NEGOCIO.telefono.visible}</a>
+      <a class="pie__enlace" href={NEGOCIO.instagram.url} target="_blank" rel="noopener">
+        <Icono nombre="instagram" /> @{NEGOCIO.instagram.usuario}
+      </a>
+    </section>
+
+    <section class="pie__bloque" aria-labelledby="pie-horario">
+      <h2 class="pie__titulo" id="pie-horario">Hours</h2>
+      {
+        horario.length ? (
+          <ul class="pie__horario">
+            {horario.map((h) => (
+              <li>
+                <span>{h.dias}</span> <strong>{h.horas}</strong>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>
+            Please call <a href={TEL_HREF}>{NEGOCIO.telefono.visible}</a> for today’s hours.
+          </p>
+        )
+      }
+    </section>
+
+    <nav class="pie__bloque" aria-labelledby="pie-explorar">
+      <h2 class="pie__titulo" id="pie-explorar">Explore</h2>
+      <ul class="pie__nav">
+        {
+          enlaces.map((e) => (
+            <li>
+              <a href={e.href}>{e.texto}</a>
+            </li>
+          ))
+        }
+        {
+          TEMPORADA.visible && (
+            <li data-temporada-aviso>
+              <a href={TEMPORADA.ruta} class="pie__especial">
+                <Icono nombre="luna" /> {TEMPORADA.nombre_corto} <em class="serif">Special</em>
+              </a>
+            </li>
+          )
+        }
+      </ul>
+    </nav>
+  </div>
+
+  <div class="wrap pie__base">
+    <figure class="pie__logo">
+      <Image src={logo} alt={`${NEGOCIO.nombre} logo`} width={168} densities={[1, 2]} quality={82} loading="lazy" />
+    </figure>
+    <p>© {anio} {NEGOCIO.nombre}</p>
+    <p>
+      Website by <a href="https://tempozzstudio.com" rel="noopener" target="_blank">Tempozz Studio</a>
+    </p>
+    <a class="pie__arriba" href="#contenido" data-sin-puerta>
+      Back to top <Icono nombre="flecha" />
+    </a>
+  </div>
+</footer>
+
+<style>
+  .pie {
+    position: relative;
+    z-index: 1;
+    background: var(--hondo);
+    color: var(--hondo-texto);
+    padding: clamp(48px, 8vw, 96px) 0 calc(var(--dock-h) + var(--safe-b) + 24px);
+  }
+
+  .pie a {
+    color: inherit;
+  }
+
+  .pie__cabeza {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: 18px 32px;
+    padding-bottom: clamp(28px, 5vw, 48px);
+    border-bottom: 1px solid var(--hondo-linea);
+  }
+
+  .pie__nombre {
+    display: flex;
+    align-items: end;
+    gap: clamp(10px, 2vw, 22px);
+    text-decoration: none;
+  }
+
+  .pie__nombre :global(.pie__jinete) {
+    width: clamp(64px, 11vw, 120px);
+    flex: none;
+    padding-bottom: 4px;
+    border-bottom: 2px solid currentColor;
+    box-sizing: content-box;
+  }
+
+  /* En el teléfono "The / Rodeo" se apila como un letrero. */
+  .pie__nombre .display {
+    font-size: clamp(2.8rem, 12vw, 7.5rem);
+    line-height: 0.84;
+  }
+
+  .pie__lema {
+    margin-left: auto;
+    display: grid;
+    gap: 4px;
+    text-align: right;
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 0.82rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--hondo-suave);
+  }
+
+  .pie__lema .serif {
+    font-size: clamp(1.7rem, 3.6vw, 2.6rem);
+    letter-spacing: 0;
+    line-height: 1;
+    color: var(--hondo-texto);
+  }
+
+  .pie__rejilla {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+    gap: 32px 28px;
+    padding-block: clamp(32px, 5vw, 56px);
+  }
+
+  .pie__bloque {
+    display: grid;
+    align-content: start;
+    gap: 10px;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  .pie__bloque p,
+  .pie__bloque address {
+    font-style: normal;
+    color: var(--hondo-texto);
+  }
+
+  .pie__titulo {
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 0.82rem;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--hondo-suave);
+  }
+
+  .pie__dato {
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 1.5rem;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    justify-self: start;
+    padding-block: 4px;
+  }
+
+  .pie__enlace {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    justify-self: start;
+    min-height: 40px;
+    font-family: var(--f-label);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border-bottom: 1px solid var(--hondo-linea);
+    transition: border-color var(--t-fast);
+  }
+
+  .pie__enlace :global(svg) {
+    width: 17px;
+    height: 17px;
+    transition: transform var(--t-base) var(--ease-out);
+  }
+
+  @media (hover: hover) {
+    .pie__enlace:hover {
+      border-color: currentColor;
+    }
+
+    .pie__enlace:hover :global(svg:last-child) {
+      transform: translateX(4px);
+    }
+  }
+
+  .pie__horario li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .pie__nav {
+    display: grid;
+    gap: 2px;
+  }
+
+  .pie__nav a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: transform var(--t-base) var(--ease-out);
+  }
+
+  @media (hover: hover) {
+    .pie__nav a:hover {
+      transform: translateX(6px);
+    }
+  }
+
+  .pie__especial :global(svg) {
+    width: 17px;
+    height: 17px;
+    color: var(--hondo-resalte, var(--hondo-suave));
+  }
+
+  .pie__especial em {
+    font-size: 1.15em;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .pie__base {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px 28px;
+    padding-top: 24px;
+    border-top: 1px solid var(--hondo-linea);
+    font-size: 0.86rem;
+    color: var(--hondo-suave);
+  }
+
+  .pie__logo {
+    margin: 0;
+    padding: 5px;
+    border: 1px solid var(--hondo-linea);
+  }
+
+  .pie__logo :global(img) {
+    width: 132px;
+    height: auto;
+  }
+
+  .pie__arriba {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    font-family: var(--f-label);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+
+  .pie__arriba :global(svg) {
+    width: 16px;
+    height: 16px;
+    transform: rotate(-90deg);
+    transition: transform var(--t-base) var(--ease-out);
+  }
+
+  @media (hover: hover) {
+    .pie__arriba:hover :global(svg) {
+      transform: rotate(-90deg) translateX(4px);
+    }
+  }
+
+  @media (max-width: 599px) {
+    .pie__lema {
+      margin-left: 0;
+      text-align: left;
+    }
+  }
+</style>

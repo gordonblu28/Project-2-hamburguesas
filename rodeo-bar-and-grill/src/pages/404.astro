@@ -1,0 +1,66 @@
+---
+import Base from '../layouts/Base.astro';
+import Icono from '../components/Icono.astro';
+import Silueta from '../components/Silueta.astro';
+import { NEGOCIO } from '../lib/datos';
+---
+
+<Base titulo={`Page not found · ${NEGOCIO.nombre}`} descripcion="This page does not exist." indexar={false}>
+  <section class="perdido wrap">
+    <Silueta class="perdido__jinete" />
+    <h1>
+      <span class="serif">Off the</span>
+      <span class="display">trail</span>
+    </h1>
+    <p>This page wandered off. The menu and our address are one tap away.</p>
+    <div class="perdido__acciones">
+      <a class="btn" href="/menu/">See the menu <Icono nombre="flecha" /></a>
+      <a class="btn btn--ghost" href="/">Home</a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .perdido {
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 16px;
+    min-height: calc(100svh - var(--header-h) - var(--dock-h));
+    padding-block: 24px;
+    text-align: center;
+  }
+
+  .perdido :global(.perdido__jinete) {
+    width: 190px;
+    transform: rotate(-12deg);
+    padding-bottom: 4px;
+    border-bottom: 2px solid currentColor;
+  }
+
+  .perdido h1 {
+    display: grid;
+    line-height: 0.85;
+  }
+
+  .perdido h1 .serif {
+    font-size: clamp(2rem, 8vw, 3.4rem);
+    color: var(--texto-suave);
+  }
+
+  .perdido h1 .display {
+    font-size: clamp(3rem, 14vw, 6rem);
+  }
+
+  .perdido p {
+    max-width: 34ch;
+    color: var(--texto-suave);
+  }
+
+  .perdido__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+</style>

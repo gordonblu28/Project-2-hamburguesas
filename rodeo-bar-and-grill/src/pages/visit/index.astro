@@ -1,0 +1,369 @@
+---
+import Base from '../../layouts/Base.astro';
+import Icono from '../../components/Icono.astro';
+import Silueta from '../../components/Silueta.astro';
+import { NEGOCIO, DIRECCION_LINEA, MAPAS, TEL_HREF } from '../../lib/datos';
+
+const d = NEGOCIO.direccion;
+const horario = NEGOCIO.horario ?? [];
+const sitio = Astro.site?.href.replace(/\/$/, '') ?? '';
+const datos = {
+  '@context': 'https://schema.org',
+  '@type': 'Restaurant',
+  name: NEGOCIO.nombre,
+  servesCuisine: ['Mexican', 'Tex-Mex'],
+  telephone: NEGOCIO.telefono.enlace,
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: d.calle,
+    addressLocality: d.ciudad,
+    addressRegion: d.estado,
+    postalCode: d.cp,
+    addressCountry: d.pais,
+  },
+  url: `${sitio}/`,
+  hasMenu: `${sitio}/menu/`,
+  sameAs: [NEGOCIO.instagram.url],
+};
+---
+
+<Base
+  titulo={`Visit · ${NEGOCIO.nombre} · ${d.calle}, ${d.ciudad}, TX`}
+  descripcion={`Find ${NEGOCIO.nombre} at ${DIRECCION_LINEA}. Call ${NEGOCIO.telefono.visible} or follow @${NEGOCIO.instagram.usuario} on Instagram.`}
+  actual="visita"
+  datosEstructurados={datos}
+  clase="pagina-visita"
+>
+  <section class="visita wrap" aria-labelledby="visita-titulo">
+    <div class="visita__ranura" aria-hidden="true"></div>
+
+    <article class="boleto" data-boleto>
+      <div class="boleto__cuerpo">
+        <p class="kicker boleto__admite">Admit all · Bar &amp; Grill · Mexican Restaurant</p>
+        <h1 id="visita-titulo" class="boleto__titulo">
+          <span class="serif">Visit</span>
+          <span class="display">The Rodeo</span>
+        </h1>
+
+        <address class="boleto__direccion">
+          <Icono nombre="pin" />
+          <span>
+            {d.calle}<br />
+            {d.ciudad}, {d.estado} {d.cp}
+          </span>
+        </address>
+
+        <div class="boleto__acciones">
+          <a class="btn" href={MAPAS.google} target="_blank" rel="noopener">
+            <Icono nombre="mapa" /> Google Maps
+          </a>
+          <a class="btn btn--ghost" href={MAPAS.apple} target="_blank" rel="noopener">Apple Maps</a>
+          <button class="btn btn--ghost boleto__copiar" type="button" data-copiar={DIRECCION_LINEA} hidden>
+            Copy address
+          </button>
+        </div>
+
+        <dl class="boleto__datos">
+          <div>
+            <dt><Icono nombre="telefono" /> Phone</dt>
+            <dd><a href={TEL_HREF}>{NEGOCIO.telefono.visible}</a></dd>
+          </div>
+          <div>
+            <dt><Icono nombre="instagram" /> Instagram</dt>
+            <dd>
+              <a href={NEGOCIO.instagram.url} target="_blank" rel="noopener">@{NEGOCIO.instagram.usuario}</a>
+            </dd>
+          </div>
+          <div class="boleto__horario">
+            <dt><Icono nombre="reloj" /> Hours</dt>
+            <dd>
+              {
+                horario.length ? (
+                  <ul>
+                    {horario.map((h) => (
+                      <li>
+                        <span>{h.dias}</span> <strong>{h.horas}</strong>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <span>
+                    Please call <a href={TEL_HREF}>{NEGOCIO.telefono.visible}</a> for today’s hours.
+                  </span>
+                )
+              }
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+      <a class="boleto__talon" href={TEL_HREF} aria-label={`Call ${NEGOCIO.nombre} at ${NEGOCIO.telefono.visible}`}>
+        <span class="boleto__numero" aria-hidden="true">No. {d.calle.split(' ')[0]}</span>
+        <Silueta class="boleto__jinete" />
+        <span class="boleto__llamar">
+          <Icono nombre="telefono" /> Call us
+        </span>
+      </a>
+    </article>
+  </section>
+</Base>
+
+<script>
+  import { iniciarVisita } from '../../scripts/visita';
+  iniciarVisita();
+</script>
+
+<style>
+  .visita {
+    position: relative;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 10px;
+    min-height: calc(100svh - var(--header-h) - var(--dock-h) - var(--safe-b));
+    padding-block: 12px 32px;
+  }
+
+  /* Ranura de la taquilla de la que sale el boleto. */
+  .visita__ranura {
+    width: min(100%, 860px);
+    height: 12px;
+    border-radius: 999px;
+    background: var(--c-negro);
+    box-shadow:
+      inset 0 3px 6px rgb(0 0 0 / 0.8),
+      0 1px 0 rgb(250 246 238 / 0.6);
+  }
+
+  /* Boleto de papel blanco cálido, impreso en negro, con doble filete. */
+  .boleto {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    width: min(100%, 820px);
+    margin-top: -7px;
+    border: 1.5px solid var(--c-negro);
+    border-radius: var(--radius);
+    background:
+      radial-gradient(90% 70% at 0% 0%, rgb(210 193 160 / 0.35), transparent 60%),
+      var(--c-blanco);
+    color: var(--c-negro);
+    box-shadow:
+      inset 0 0 0 6px var(--c-blanco),
+      inset 0 0 0 7px rgb(20 18 15 / 0.35),
+      0 40px 60px -40px rgb(20 18 15 / 0.55);
+    transform-origin: 50% 0;
+  }
+
+  .boleto__cuerpo {
+    display: grid;
+    gap: 14px;
+    padding: 22px 20px 18px;
+  }
+
+  .boleto__admite {
+    font-size: 0.78rem;
+  }
+
+  .boleto__titulo {
+    display: grid;
+    line-height: 0.9;
+  }
+
+  .boleto__titulo .serif {
+    font-size: clamp(1.9rem, 7vw, 3rem);
+    color: var(--c-cuero);
+  }
+
+  .boleto__titulo .display {
+    font-size: clamp(2.3rem, 10vw, 4.8rem);
+  }
+
+  .boleto__direccion {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    font-style: normal;
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: clamp(1.3rem, 5.4vw, 1.8rem);
+    line-height: 1.15;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .boleto__direccion :global(svg) {
+    width: 26px;
+    height: 26px;
+    flex: none;
+    margin-top: 2px;
+  }
+
+  .boleto__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .boleto__acciones .btn {
+    min-height: 48px;
+    font-size: 0.96rem;
+    padding: 0 1.1em;
+  }
+
+  .boleto__datos {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+    padding-top: 16px;
+    border-top: 1.5px dashed rgb(20 18 15 / 0.3);
+  }
+
+  .boleto__datos > div {
+    display: grid;
+    grid-template-columns: 116px minmax(0, 1fr);
+    gap: 10px;
+    align-items: baseline;
+  }
+
+  .boleto__datos dt {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--f-label);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-size: 0.84rem;
+    color: var(--c-cuero);
+  }
+
+  .boleto__datos dt :global(svg) {
+    width: 16px;
+    height: 16px;
+  }
+
+  .boleto__datos dd {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+
+  .boleto__datos a {
+    color: var(--c-negro);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+  }
+
+  /* Objetivos táctiles cómodos aunque sean enlaces de texto. */
+  .boleto__datos dd > a {
+    display: inline-block;
+    padding-block: 10px;
+    margin-block: -10px;
+  }
+
+  .boleto__horario dd a {
+    display: inline-block;
+    padding-block: 8px;
+    margin-block: -8px;
+  }
+
+  .boleto__horario li {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  /* Talón negro: separado por una línea perforada; al tocarlo, llama. */
+  .boleto__talon {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    border-top: 2px dotted var(--c-blanco);
+    background: var(--c-negro);
+    color: var(--c-beige);
+    text-decoration: none;
+    transition: transform var(--t-base) var(--ease-buck);
+    transform-origin: 50% 0;
+  }
+
+  .boleto__numero {
+    font-family: var(--f-display);
+    font-size: 1.1rem;
+    letter-spacing: 0.04em;
+  }
+
+  .boleto__talon :global(.boleto__jinete) {
+    width: 76px;
+    justify-self: center;
+    padding-bottom: 3px;
+    border-bottom: 1.5px solid currentColor;
+  }
+
+  .boleto__llamar {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: var(--radius);
+    background: var(--c-beige);
+    color: var(--c-negro);
+    font-family: var(--f-label);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    transition: box-shadow var(--t-base) var(--ease-out);
+  }
+
+  .boleto__llamar :global(svg) {
+    width: 18px;
+    height: 18px;
+  }
+
+  @media (hover: hover) {
+    .boleto__talon:hover {
+      transform: rotate(-1.2deg) translateY(3px);
+    }
+
+    .boleto__talon:hover .boleto__llamar {
+      box-shadow:
+        inset 0 0 0 3px var(--c-beige),
+        inset 0 0 0 4px var(--c-negro);
+    }
+  }
+
+  @media (min-width: 900px) {
+    .boleto {
+      grid-template-columns: minmax(0, 1fr) 220px;
+    }
+
+    .boleto__cuerpo {
+      padding: 38px 40px;
+    }
+
+    .boleto__talon {
+      grid-template-columns: 1fr;
+      justify-items: center;
+      align-content: center;
+      gap: 18px;
+      border-top: 0;
+      border-left: 2px dotted var(--c-blanco);
+      transform-origin: 0 50%;
+    }
+
+    .boleto__talon :global(.boleto__jinete) {
+      width: 132px;
+    }
+
+    @media (hover: hover) {
+      .boleto__talon:hover {
+        transform: rotate(2deg) translateX(4px);
+      }
+    }
+  }
+</style>
+

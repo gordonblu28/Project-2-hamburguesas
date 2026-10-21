@@ -1,0 +1,123 @@
+---
+// Barra inferior en el teléfono: Menú, Favoritos, Visítenos y Halloween a un toque del pulgar.
+import Icono, { type NombreIcono } from './Icono.astro';
+import type { Pagina } from './Cabecera.astro';
+import { TEMPORADA } from '../lib/datos';
+
+interface Props {
+  actual?: Pagina;
+}
+const { actual } = Astro.props;
+const enlaces: { href: string; texto: string; id: Pagina; icono: NombreIcono; especial?: boolean }[] = [
+  { href: '/', texto: 'Home', id: 'inicio', icono: 'casa' },
+  { href: '/menu/', texto: 'Menu', id: 'menu', icono: 'menu' },
+  { href: '/favorites/', texto: 'Favorites', id: 'favoritos', icono: 'estrella' },
+  { href: '/visit/', texto: 'Visit', id: 'visita', icono: 'pin' },
+  ...(TEMPORADA.visible ? [{ href: TEMPORADA.ruta, texto: TEMPORADA.nombre_corto, id: 'temporada' as Pagina, icono: 'luna' as NombreIcono, especial: true }] : []),
+];
+---
+
+<nav class="dock" aria-label="Main">
+  <ul style={`--columnas:${enlaces.length}`}>
+    {
+      enlaces.map((e) => (
+        <li class:list={{ 'dock__especial': e.especial }} data-temporada-aviso={e.especial ? '' : undefined}>
+          <a href={e.href} aria-current={actual === e.id ? 'page' : undefined} data-astro-prefetch>
+            <span class="dock__espuela" aria-hidden="true" />
+            <Icono nombre={e.icono} />
+            <span>{e.texto}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<style>
+  .dock {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 50;
+    padding: 4px max(6px, var(--gutter)) calc(4px + var(--safe-b));
+    background: var(--dock-fondo);
+    border-top: 1px solid var(--linea);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: var(--texto);
+  }
+
+  .dock ul {
+    display: grid;
+    grid-template-columns: repeat(var(--columnas, 4), 1fr);
+    max-width: 560px;
+    margin-inline: auto;
+  }
+
+  .dock a {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 58px;
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 0.74rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--texto-suave);
+    -webkit-tap-highlight-color: transparent;
+    transition: color var(--t-fast);
+  }
+
+  .dock a :global(svg) {
+    width: 23px;
+    height: 23px;
+    stroke-width: 1.7;
+    transition: transform var(--t-base) var(--ease-buck);
+  }
+
+  .dock a:active :global(svg) {
+    transform: translateY(-3px) rotate(-8deg);
+  }
+
+  .dock a[aria-current='page'] {
+    color: var(--texto);
+  }
+
+  .dock__especial a :global(svg) {
+    color: var(--resalte);
+  }
+
+  /* Espuela: la estrella del acicate marca la página actual y gira al llegar. */
+  .dock__espuela {
+    position: absolute;
+    top: 0;
+    width: 11px;
+    height: 11px;
+    background: currentColor;
+    clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+    transform: scale(0);
+  }
+
+  .dock a[aria-current='page'] .dock__espuela {
+    animation: espuela 0.7s var(--ease-buck) 0.35s both;
+  }
+
+  @keyframes espuela {
+    from {
+      transform: scale(0) rotate(0);
+    }
+    to {
+      transform: scale(1) rotate(144deg);
+    }
+  }
+
+  @media (min-width: 900px) {
+    .dock {
+      display: none;
+    }
+  }
+</style>

@@ -1,0 +1,43 @@
+---
+// Texto partido en letras para la tipografía cinética. Los lectores de pantalla leen el texto
+// completo una sola vez; las letras animables quedan ocultas para ellos.
+interface Props {
+  texto: string;
+  class?: string;
+  as?: 'span' | 'h1' | 'h2' | 'p';
+  id?: string;
+}
+
+const { texto, class: clase, as: Tag = 'span', id } = Astro.props;
+const palabras = texto.split(' ');
+// Índice de cada letra (--i) para escalonar animaciones solo con CSS.
+let n = 0;
+const conIndice = palabras.map((p) => [...p].map((l) => ({ l, i: n++ })));
+---
+
+<Tag class:list={['letras', clase]} id={id}>
+  <span class="visually-hidden">{texto}</span>
+  <span class="letras__vista" aria-hidden="true">
+    {
+      conIndice.map((palabra, i) => (
+        <>
+          <span class="palabra">
+            {palabra.map(({ l, i: k }) => (
+              <span class="letra" style={`--i:${k}`}>
+                {l}
+              </span>
+            ))}
+          </span>
+          {i < conIndice.length - 1 && ' '}
+        </>
+      ))
+    }
+  </span>
+</Tag>
+
+<style>
+  .palabra {
+    display: inline-block;
+    white-space: nowrap;
+  }
+</style>

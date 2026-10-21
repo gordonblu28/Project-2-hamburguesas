@@ -1,0 +1,233 @@
+---
+// Plato en un medallón redondo rodeado por un lazo de cuerda (el "lazo" es la firma visual
+// del sitio: atrapa cada plato). Sin foto, muestra un emblema dibujado, nunca una foto ajena.
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import Icono, { type NombreIcono } from './Icono.astro';
+import { ladoMaximo } from '../lib/menu';
+
+interface Props {
+  img?: ImageMetadata;
+  alt?: string;
+  /** Tamaño deseado en px CSS (se limita por la resolución de la foto). */
+  lado: number;
+  icono?: NombreIcono;
+  prioridad?: boolean;
+  anillo?: boolean;
+  class?: string;
+  /** Texto del emblema cuando no hay foto (por ejemplo, el número del plato). */
+  marca?: string;
+  /** Más fotos apiladas en el mismo medallón (el inicio las alterna con el lazo). */
+  alternas?: { img: ImageMetadata; alt: string }[];
+}
+
+const {
+  img,
+  alt = '',
+  lado,
+  icono = 'estrella',
+  prioridad = false,
+  anillo = true,
+  class: clase,
+  marca,
+  alternas = [],
+} = Astro.props;
+const tam = img ? Math.min(lado, ...[img, ...alternas.map((a) => a.img)].map(ladoMaximo)) : lado;
+const anchos = (i: ImageMetadata) => [...new Set([tam, Math.min(i.width, tam * 2)].map((n) => Math.round(n)))];
+const id = `lazo-${Math.random().toString(36).slice(2, 9)}`;
+---
+
+<figure class:list={['medallon', clase, { 'medallon--emblema': !img }]} style={`--lado:${tam}px`}>
+  <div class="medallon__plato">
+    {
+      img ? (
+        <>
+          <Image
+            src={img}
+            alt={alt}
+            widths={anchos(img)}
+            sizes={`${tam}px`}
+            quality={80}
+            loading={prioridad ? 'eager' : 'lazy'}
+            fetchpriority={prioridad ? 'high' : 'auto'}
+            decoding="async"
+            data-activa
+          />
+          {alternas.map((a) => (
+            <Image
+              src={a.img}
+              alt={a.alt}
+              widths={anchos(a.img)}
+              sizes={`${tam}px`}
+              quality={80}
+              loading="lazy"
+              decoding="async"
+              class="medallon__alterna"
+            />
+          ))}
+        </>
+      ) : (
+        <div class="medallon__emblema" role="img" aria-label={alt || undefined} aria-hidden={alt ? undefined : 'true'}>
+          <Icono nombre={icono} />
+          {marca && <span>{marca}</span>}
+        </div>
+      )
+    }
+  </div>
+  {
+    anillo && (
+      <svg class="medallon__lazo" viewBox="0 0 200 200" aria-hidden="true">
+        <defs>
+          <mask id={id} maskUnits="userSpaceOnUse" x="0" y="0" width="200" height="200">
+            <circle
+              class="lazo-trazo"
+              cx="100"
+              cy="100"
+              r="93"
+              fill="none"
+              stroke="#fff"
+              stroke-width="16"
+              pathLength="1"
+              transform="rotate(-50 100 100)"
+            />
+          </mask>
+        </defs>
+        <g mask={`url(#${id})`}>
+          <circle class="lazo-cuerda" cx="100" cy="100" r="93" />
+          <circle class="lazo-hebra" cx="100" cy="100" r="93" />
+          <circle class="lazo-brillo" cx="100" cy="100" r="91" />
+        </g>
+        <g class="lazo-honda" transform="rotate(-50 100 100)">
+          <ellipse cx="193" cy="100" rx="6.5" ry="11" />
+          <ellipse cx="193" cy="100" rx="2.6" ry="6" />
+        </g>
+      </svg>
+    )
+  }
+  <slot />
+</figure>
+
+<style>
+  .medallon {
+    position: relative;
+    width: min(var(--lado), 100%);
+    aspect-ratio: 1;
+    margin: 0;
+    flex: none;
+  }
+
+  .medallon__plato {
+    position: absolute;
+    inset: 9%;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--c-carbon);
+    box-shadow:
+      0 0 0 2px var(--c-negro),
+      0 22px 40px -18px rgb(20 18 15 / 0.65);
+    clip-path: circle(50% at 50% 50%);
+  }
+
+  .medallon__plato :global(img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: saturate(1.06) contrast(1.04);
+  }
+
+  .medallon__plato :global(.medallon__alterna) {
+    visibility: hidden;
+  }
+
+  .medallon__plato::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 30% 25%, rgb(255 255 255 / 0.18), transparent 45%),
+      radial-gradient(rgb(0 0 0 / 0.22) 0.6px, transparent 0.9px) 0 0 / 3px 3px;
+    mix-blend-mode: multiply;
+  }
+
+  /* Sin foto: emblema dibujado sobre un sol de rayos, como una placa grabada. */
+  .medallon__emblema {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 0.2em;
+    background:
+      repeating-conic-gradient(from 0deg, rgb(231 220 200 / 0.07) 0 10deg, transparent 10deg 20deg),
+      radial-gradient(circle, var(--c-carbon), var(--c-negro));
+    color: var(--c-arena);
+  }
+
+  .medallon__emblema :global(svg) {
+    width: 42%;
+    height: auto;
+    stroke-width: 1.4;
+  }
+
+  .medallon__emblema :global(span) {
+    font-family: var(--f-label);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    font-size: clamp(0.7rem, calc(var(--lado) * 0.08), 1.1rem);
+    text-transform: uppercase;
+    color: var(--c-beige);
+  }
+
+  .medallon__lazo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .lazo-cuerda,
+  .lazo-hebra,
+  .lazo-brillo {
+    fill: none;
+  }
+
+  .lazo-cuerda {
+    stroke: var(--cuerda);
+    stroke-width: 6;
+  }
+
+  .lazo-hebra {
+    stroke: var(--cuerda-oscura);
+    stroke-width: 6;
+    stroke-dasharray: 2.2 3.6;
+  }
+
+  .lazo-brillo {
+    stroke: #efe2c4;
+    stroke-width: 1.2;
+    stroke-dasharray: 1.6 4.2;
+    stroke-dashoffset: 1;
+    opacity: 0.75;
+  }
+
+  .lazo-honda ellipse:first-child {
+    fill: var(--cuerda);
+    stroke: var(--c-negro);
+    stroke-width: 1.2;
+  }
+
+  .lazo-honda ellipse:last-child {
+    fill: var(--fondo);
+  }
+
+  .lazo-trazo {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+  }
+</style>

@@ -1,0 +1,128 @@
+---
+import '@fontsource/ultra/latin-400.css';
+import '@fontsource/barlow/latin-400.css';
+import '@fontsource/barlow/latin-600.css';
+import '@fontsource/barlow-condensed/latin-700.css';
+import '@fontsource/instrument-serif/latin-400.css';
+import '@fontsource/instrument-serif/latin-400-italic.css';
+import '../styles/global.css';
+import ultraLatin from '@fontsource/ultra/files/ultra-latin-400-normal.woff2?url';
+import barlowLatin from '@fontsource/barlow/files/barlow-latin-400-normal.woff2?url';
+import condensadaLatin from '@fontsource/barlow-condensed/files/barlow-condensed-latin-700-normal.woff2?url';
+import serifCursiva from '@fontsource/instrument-serif/files/instrument-serif-latin-400-italic.woff2?url';
+import serifRecta from '@fontsource/instrument-serif/files/instrument-serif-latin-400-normal.woff2?url';
+import Cabecera, { type Pagina } from '../components/Cabecera.astro';
+import Dock from '../components/Dock.astro';
+import Puerta from '../components/Puerta.astro';
+import Pie from '../components/Pie.astro';
+import { NEGOCIO, TEMPORADA } from '../lib/datos';
+
+interface Props {
+  titulo: string;
+  descripcion: string;
+  actual?: Pagina;
+  /** JSON-LD opcional para la página. */
+  datosEstructurados?: Record<string, unknown>;
+  indexar?: boolean;
+  /** Clase para <body> (cada página ajusta su propio lienzo). */
+  clase?: string;
+  /** Identidad visual: la principal (beige, blanco y negro) o la de la temporada. */
+  tema?: 'principal' | 'halloween';
+}
+
+const { titulo, descripcion, actual, datosEstructurados, indexar = true, clase, tema = 'principal' } = Astro.props;
+const sitio = Astro.site;
+const canonica = sitio ? new URL(Astro.url.pathname, sitio).href : undefined;
+const imagenSocial = sitio ? new URL('/og-image.jpg', sitio).href : '/og-image.jpg';
+const colorNavegador = tema === 'halloween' ? '#120a1a' : '#e7dcc8';
+---
+
+<!doctype html>
+<html
+  lang="en-US"
+  data-tema={tema}
+  data-ruta-temporada={TEMPORADA.ruta}
+  data-temporada-fin={TEMPORADA.activa ? TEMPORADA.finISO : undefined}
+  data-temporada-al-terminar={TEMPORADA.al_terminar}
+  data-temporada-mensaje={TEMPORADA.mensaje_final}
+  data-temporada={TEMPORADA.vigenteAlCompilar ? 'vigente' : 'terminada'}
+>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{titulo}</title>
+    <meta name="description" content={descripcion} />
+    {canonica && <link rel="canonical" href={canonica} />}
+    {!indexar && <meta name="robots" content="noindex" />}
+    <meta name="theme-color" content={colorNavegador} />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="preload" href={ultraLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={condensadaLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={serifCursiva} as="font" type="font/woff2" crossorigin />
+    {/* El título y el contador de Halloween usan la serif recta: es su elemento principal (LCP). */}
+    {tema === 'halloween' && <link rel="preload" href={serifRecta} as="font" type="font/woff2" crossorigin />}
+    <link rel="preload" href={barlowLatin} as="font" type="font/woff2" crossorigin />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:site_name" content={NEGOCIO.nombre} />
+    <meta property="og:title" content={titulo} />
+    <meta property="og:description" content={descripcion} />
+    {canonica && <meta property="og:url" content={canonica} />}
+    <meta property="og:image" content={imagenSocial} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={`${NEGOCIO.nombre} logo`} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    {datosEstructurados && <script type="application/ld+json" set:html={JSON.stringify(datosEstructurados)} />}
+    <!-- Antes de pintar: preferencia de movimiento y transición pendiente si se llega desde otra página. -->
+    <script is:inline>
+      (function () {
+        var h = document.documentElement;
+        var v = null;
+        try {
+          v = localStorage.getItem('rodeo-movimiento');
+        } catch (e) {}
+        var reducir = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        h.dataset.motion = v === 'on' || (v !== 'off' && !reducir) ? 'on' : 'off';
+        try {
+          var paso = sessionStorage.getItem('rodeo-puerta');
+          if (paso && h.dataset.motion === 'on') {
+            // con-puerta no se quita: las entradas en CSS esperan a que la puerta (o el velo) se abra.
+            if (paso === 'velo') h.classList.add('velo-activo', 'velo-cerrado', 'con-puerta');
+            else h.classList.add('puerta-activa', 'puerta-cerrada', 'con-puerta');
+          }
+          sessionStorage.removeItem('rodeo-puerta');
+        } catch (e) {}
+        h.classList.add('js');
+        // Si los scripts no llegan a cargar, nada queda oculto esperando su animación de entrada.
+        setTimeout(function () {
+          if (!window.__rodeoRevela) h.classList.add('sin-revela');
+        }, 3000);
+      })();
+    </script>
+  </head>
+  <body class={clase}>
+    <a class="skip" href="#contenido">Skip to content</a>
+    <Cabecera actual={actual} />
+    <main id="contenido" tabindex="-1">
+      <slot />
+    </main>
+    <Pie />
+    <Dock actual={actual} />
+    <Puerta />
+    <script>
+      import { iniciarMovimiento } from '../scripts/movimiento';
+      import { iniciarPuerta } from '../scripts/puerta';
+      import { iniciarRevelado } from '../scripts/revelar';
+      import { iniciarCuentas } from '../scripts/cuenta';
+      iniciarMovimiento();
+      iniciarPuerta();
+      iniciarRevelado();
+      iniciarCuentas();
+    </script>
+  </body>
+</html>

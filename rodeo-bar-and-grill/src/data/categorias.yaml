@@ -1,0 +1,137 @@
+# Categorías del menú, en el orden en que aparecen.
+# seccion: kitchen (comida) | bar (bebidas)
+# foto: nombre de un archivo de src/assets/platos/ (sin .jpg) para la portada de la categoría
+# icono: dibujo para categorías sin foto (margarita, coctel, cerveza, botella, refresco)
+# nota: aviso que se muestra en la categoría (tomado del menú impreso)
+
+- id: appetizers
+  nombre: Appetizers
+  corto: Appetizers
+  seccion: kitchen
+  foto: rodeo-botana
+  orden: 1
+
+- id: plates
+  nombre: Lunch & Dinner Plates
+  corto: Plates
+  seccion: kitchen
+  foto: tapatio-plate
+  orden: 2
+
+- id: steaks
+  nombre: Steaks
+  corto: Steaks
+  seccion: kitchen
+  foto: steak-and-shrimp
+  orden: 3
+
+- id: parrilladas
+  nombre: Parrilladas
+  corto: Parrilladas
+  seccion: kitchen
+  foto: parrillada-platter
+  foto_alt: Sizzling platter shown in the Parrilladas section of The Rodeo's printed menu
+  orden: 4
+
+- id: molcajetes
+  nombre: Molcajetes
+  corto: Molcajetes
+  seccion: kitchen
+  foto: pound-of-barbacoa
+  orden: 5
+
+- id: chicken
+  nombre: Chicken
+  corto: Chicken
+  seccion: kitchen
+  foto: pollo-feliz
+  orden: 6
+
+- id: texmex
+  nombre: Tex-Mex Plates
+  corto: Tex-Mex
+  seccion: kitchen
+  foto: tampiquena-plate
+  orden: 7
+
+- id: enchiladas
+  nombre: Enchiladas
+  corto: Enchiladas
+  seccion: kitchen
+  foto: enchiladas-verdes
+  orden: 8
+
+- id: seafood
+  nombre: Seafood
+  corto: Seafood
+  seccion: kitchen
+  foto: shrimp-cocktail
+  orden: 9
+
+- id: soups-salads
+  nombre: Soups & Salads
+  corto: Soups & Salads
+  seccion: kitchen
+  foto: menudo
+  orden: 10
+
+- id: burritos
+  nombre: Burritos, Tortas & More
+  corto: Burritos & More
+  seccion: kitchen
+  foto: jalisco-burrito
+  orden: 11
+
+- id: tacos
+  nombre: Tacos
+  corto: Tacos
+  seccion: kitchen
+  foto: quesabirrias
+  orden: 12
+
+- id: kids
+  nombre: Child Plates
+  corto: Kids
+  seccion: kitchen
+  foto: child-plate
+  foto_alt: Child plate shown in The Rodeo's printed menu
+  orden: 13
+
+- id: margaritas
+  nombre: Margaritas
+  corto: Margaritas
+  seccion: bar
+  icono: margarita
+  nota: Ask your server for prices.
+  orden: 20
+
+- id: cocktails
+  nombre: Specialty Cocktails
+  corto: Cocktails
+  seccion: bar
+  icono: coctel
+  nota: Ask your server for prices.
+  orden: 21
+
+- id: beer
+  nombre: Cervezas (Beer)
+  corto: Beer
+  seccion: bar
+  icono: cerveza
+  nota: Ask your server for prices — and about seasonal & specialty beers!
+  orden: 22
+
+- id: spirits
+  nombre: Spirits
+  corto: Spirits
+  seccion: bar
+  icono: botella
+  nota: Ask your server for prices.
+  orden: 23
+
+- id: soft-drinks
+  nombre: Soft Drinks
+  corto: Soft Drinks
+  seccion: bar
+  icono: refresco
+  orden: 24

@@ -1,0 +1,71 @@
+/* ────────────────────────────────────────────────────────────────
+   The Rodeo Bar And Grill — identidad de Halloween
+   Solo la carga src/pages/halloween/. Redefine los tokens semánticos de
+   global.css, así la cabecera, el pie, los botones y las transiciones
+   cambian a la noche sin que el beige del sitio principal se filtre.
+
+   Morado oscuro protagonista, naranja quemado para lo importante, negro
+   carbón para sombras y fondos, y beige pálido solo para leer.
+   ──────────────────────────────────────────────────────────────── */
+
+html[data-tema='halloween'] {
+  --n-carbon: #120a1a;
+  --n-sombra: #0b0610;
+  --n-noche: #1b0f27;
+  --n-morado: #2a1340;
+  --n-morado-medio: #4b2470;
+  --n-morado-luz: #7a4fa8;
+  /* Naranja quemado: 5.5:1 sobre el carbón, apto para texto. */
+  --n-naranja: #d9692a;
+  --n-brasa: #b44f1c;
+  --n-luna: #efe4d0;
+  --n-luna-sombra: #c9ad85;
+  --n-lavanda: #b9a9c4;
+
+  --fondo: var(--n-carbon);
+  --fondo-alto: var(--n-noche);
+  --fondo-medio: #22132f;
+  --texto: var(--n-luna);
+  --texto-suave: var(--n-lavanda);
+  --linea: rgb(239 228 208 / 0.14);
+  --linea-fuerte: rgb(239 228 208 / 0.5);
+  --acento: var(--n-naranja);
+  --sobre-acento: var(--n-carbon);
+  --resalte: var(--n-naranja);
+  --cuerda: #8a6a52;
+  --cuerda-oscura: #5a4232;
+  --hondo: var(--n-sombra);
+  --hondo-texto: var(--n-luna);
+  --hondo-suave: var(--n-lavanda);
+  --hondo-linea: rgb(239 228 208 / 0.12);
+  --hondo-resalte: var(--n-naranja);
+  --cabecera-fondo: rgb(18 10 26 / 0.74);
+  --dock-fondo: rgb(18 10 26 / 0.92);
+  --velo: radial-gradient(70% 55% at 50% 55%, var(--n-morado), var(--n-carbon) 70%);
+  --grano-opacidad: 0.06;
+  --grano-mezcla: overlay;
+  color-scheme: dark;
+}
+
+/* Botón secundario: el contorno se llena de naranja, no de beige. */
+html[data-tema='halloween'] .btn--ghost::before {
+  background: var(--n-naranja);
+}
+
+html[data-tema='halloween'] .btn--ghost:hover {
+  color: var(--n-carbon);
+  border-color: var(--n-naranja);
+}
+
+html[data-tema='halloween'] .kicker {
+  color: var(--n-naranja);
+}
+
+/* Los enlaces internos de la página (Explore the specials, Scroll) llegan deslizándose. */
+html[data-tema='halloween'][data-motion='on'] {
+  scroll-behavior: smooth;
+}
+
+html[data-tema='halloween'] [id] {
+  scroll-margin-top: var(--header-h);
+}
