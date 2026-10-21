@@ -1,0 +1,17 @@
+THE RODEO BAR AND GRILL — VER EL SITIO EN SU COMPUTADORA
+=========================================================
+
+1. Descomprima este ZIP (clic derecho → "Extraer todo"). No lo abra desde dentro del ZIP.
+2. Doble clic en:
+     · Windows:  ABRIR-SITIO-Windows.bat
+     · Mac:      ABRIR-SITIO-Mac.command
+       (si el Mac no lo deja abrir: clic derecho → Abrir → Abrir)
+3. Se abre el navegador en  http://localhost:8080/
+   Para detener el sitio, cierre la ventana negra (Windows) o la de Terminal (Mac).
+
+Por qué no basta con abrir index.html: los navegadores bloquean partes del sitio (menú
+interactivo, animaciones) cuando se abre como archivo. Estos accesos levantan un servidor
+pequeño que solo funciona en su computadora; nada se publica en internet.
+
+Las reservaciones en línea mostrarán "not available" y pedirán llamar: necesitan el servidor
+en Cloudflare con Stripe (ver README.md del proyecto). Todo lo demás funciona igual.

@@ -1,6 +1,8 @@
 // Crea entrega/rodeo-bar-and-grill-cloudflare.zip con el contenido de dist/
 // (index.html en la raíz del ZIP), listo para subir a Cloudflare Pages.
 //   node scripts/empaquetar.mjs --codigo  → entrega/rodeo-bar-and-grill-codigo.zip (proyecto editable)
+//   node scripts/empaquetar.mjs --local   → entrega/rodeo-bar-and-grill-local.zip: dist/ en sitio/ más los
+//                                           accesos de scripts/local/ para verlo con doble clic (Windows/Mac)
 // Escribe el ZIP sin dependencias y con rutas "/" para que funcione en cualquier sistema.
 import { readdir, readFile, stat, mkdir, writeFile } from 'node:fs/promises';
 import { deflateRawSync, crc32 } from 'node:zlib';
@@ -9,8 +11,10 @@ import path from 'node:path';
 
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const codigo = process.argv.includes('--codigo');
+const local = process.argv.includes('--local');
 const origen = codigo ? raiz : path.join(raiz, 'dist');
-const destino = path.join(raiz, 'entrega', codigo ? 'rodeo-bar-and-grill-codigo.zip' : 'rodeo-bar-and-grill-cloudflare.zip');
+const nombreZip = codigo ? 'rodeo-bar-and-grill-codigo.zip' : local ? 'rodeo-bar-and-grill-local.zip' : 'rodeo-bar-and-grill-cloudflare.zip';
+const destino = path.join(raiz, 'entrega', nombreZip);
 // .dev.vars guarda claves de prueba locales: nunca se entrega.
 const EXCLUIR = new Set(['node_modules', 'dist', 'entrega', '.astro', '.wrangler', '.playwright-mcp', '.claude', 'revision', '.git', '.dev.vars']);
 
@@ -31,13 +35,21 @@ function fechaDos(d) {
   return { hora, fecha };
 }
 
-const archivos = (await listar(origen)).sort();
+// [ruta en disco, nombre dentro del ZIP]
+const dirLocal = path.join(raiz, 'scripts', 'local');
+const entradas = local
+  ? [
+      ...(await listar(dirLocal)).sort().map((a) => [a, path.relative(dirLocal, a)]),
+      ...(await listar(origen)).sort().map((a) => [a, path.join('sitio', path.relative(origen, a))]),
+    ]
+  : (await listar(origen)).sort().map((a) => [a, path.relative(origen, a)]);
+const archivos = entradas.map(([a]) => a);
 const locales = [];
 const central = [];
 let desplazamiento = 0;
 
-for (const archivo of archivos) {
-  const nombre = Buffer.from(path.relative(origen, archivo).split(path.sep).join('/'), 'utf8');
+for (const [archivo, enZip] of entradas) {
+  const nombre = Buffer.from(enZip.split(path.sep).join('/'), 'utf8');
   const datos = await readFile(archivo);
   const comprimido = deflateRawSync(datos, { level: 9 });
   const usarDeflate = comprimido.length < datos.length;
@@ -72,6 +84,11 @@ for (const archivo of archivos) {
   cab.writeUInt32LE(cuerpo.length, 20);
   cab.writeUInt32LE(datos.length, 24);
   cab.writeUInt16LE(nombre.length, 28);
+  // "Hecho en Unix" con permisos rwxr-xr-x para los .command (el Mac los abre con doble clic).
+  if (archivo.endsWith('.command')) {
+    cab.writeUInt16LE((3 << 8) | 20, 4);
+    cab.writeUInt32LE(((0o100755 << 16) >>> 0), 38);
+  }
   cab.writeUInt32LE(desplazamiento, 42);
   central.push(cab, nombre);
 

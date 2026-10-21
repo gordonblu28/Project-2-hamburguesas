@@ -19,7 +19,8 @@
     "test": "node --test tests/*.test.ts",
     "test:integracion": "node --test --test-concurrency=1 tests/integracion/*.test.ts",
     "dev:worker": "npx wrangler@4 dev",
-    "db:migrar": "npx wrangler@4 d1 migrations apply rodeo-reservaciones --remote"
+    "db:migrar": "npx wrangler@4 d1 migrations apply rodeo-reservaciones --remote",
+    "zip:local": "node scripts/empaquetar.mjs --local"
   },
   "dependencies": {
     "@fontsource/barlow": "5.3.0",
