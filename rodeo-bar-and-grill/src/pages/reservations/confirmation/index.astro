@@ -1,0 +1,262 @@
+---
+// Vuelta de Stripe: muestra el estado REAL de la reserva consultando al servidor (que a su vez
+// verifica el pago con Stripe). No dice "confirmada" hasta que el servidor lo diga.
+import Base from '../../../layouts/Base.astro';
+import Icono from '../../../components/Icono.astro';
+import PapelPicado from '../../../components/PapelPicado.astro';
+import { NEGOCIO, TEL_HREF, MAPAS, DIRECCION_LINEA } from '../../../lib/datos';
+---
+
+<Base titulo={`Your reservation · ${NEGOCIO.nombre}`} descripcion={`Reservation status at ${NEGOCIO.nombre}.`} actual="reservas" indexar={false} clase="pagina-confirmacion">
+  <PapelPicado class="confirmacion__papel" cantidad={30} />
+  <section class="wrap confirmacion" data-confirmacion data-direccion={DIRECCION_LINEA} data-negocio={NEGOCIO.nombre} aria-live="polite">
+    <div class="estado" data-estado="cargando">
+      <span class="estado__icono estado__icono--espera" aria-hidden="true"></span>
+      <h1 class="estado__titulo">Checking your reservation…</h1>
+      <p>One moment while we verify your payment.</p>
+    </div>
+
+    <div class="estado" data-estado="pendiente" hidden>
+      <span class="estado__icono estado__icono--espera" aria-hidden="true"></span>
+      <h1 class="estado__titulo">Verifying your payment…</h1>
+      <p>Your table is being held. This usually takes a few seconds — please keep this page open.</p>
+    </div>
+
+    <div class="estado" data-estado="procesando" hidden>
+      <span class="estado__icono estado__icono--reloj"><Icono nombre="reloj" /></span>
+      <h1 class="estado__titulo">Your payment is processing</h1>
+      <p>
+        Your bank hasn’t confirmed the deposit yet, so your reservation isn’t confirmed. Your table stays held while it processes —
+        this page will update when it’s done. Questions? <a href={TEL_HREF}>{NEGOCIO.telefono.visible}</a>.
+      </p>
+    </div>
+
+    <div class="estado estado--ok" data-estado="confirmada" hidden>
+      <span class="estado__icono estado__icono--ok"><Icono nombre="check" /></span>
+      <p class="kicker">¡Nos vemos pronto!</p>
+      <h1 class="estado__titulo"><span data-dato="saludo">You’re all set</span></h1>
+      <p>Your deposit was received and your table is confirmed. A payment receipt is on its way to your email.</p>
+      <div class="ticket">
+        <div class="tricolor" aria-hidden="true"></div>
+        <p class="ticket__codigo">Confirmation <strong data-dato="codigo"></strong></p>
+        <dl class="ticket__datos">
+          <div><dt>Date</dt><dd data-dato="fecha"></dd></div>
+          <div><dt>Time</dt><dd data-dato="hora"></dd></div>
+          <div><dt>Guests</dt><dd data-dato="personas"></dd></div>
+          <div data-fila="peticiones"><dt>Requests</dt><dd data-dato="peticiones"></dd></div>
+          <div><dt>Deposit paid</dt><dd data-dato="deposito"></dd></div>
+          <div class="ticket__resto"><dt>Due at the restaurant</dt><dd data-dato="resto"></dd></div>
+        </dl>
+        <p class="ticket__lugar"><Icono nombre="pin" /> {NEGOCIO.nombre} · {DIRECCION_LINEA}</p>
+      </div>
+      <div class="estado__acciones">
+        <button class="btn" type="button" data-calendario><Icono nombre="calendario" /> Add to calendar</button>
+        <a class="btn btn--ghost" href={MAPAS.google} target="_blank" rel="noopener"><Icono nombre="mapa" /> Directions</a>
+      </div>
+      <p class="estado__nota">Need to change or cancel? Call us at <a href={TEL_HREF}>{NEGOCIO.telefono.visible}</a> and mention your confirmation code.</p>
+    </div>
+
+    <div class="estado estado--mal" data-estado="no_confirmada" hidden>
+      <span class="estado__icono estado__icono--mal"><Icono nombre="cerrar" /></span>
+      <h1 class="estado__titulo">Your reservation was not confirmed</h1>
+      <p data-dato="motivo">The payment was not completed, so no table was reserved.</p>
+      <div class="estado__acciones">
+        <a class="btn" href="/reservations/#reservar"><Icono nombre="calendario" /> Try again</a>
+        <a class="btn btn--ghost" href={TEL_HREF}><Icono nombre="telefono" /> Call us</a>
+      </div>
+    </div>
+
+    <div class="estado" data-estado="revision" hidden>
+      <span class="estado__icono estado__icono--reloj"><Icono nombre="reloj" /></span>
+      <h1 class="estado__titulo">We’re reviewing your payment</h1>
+      <p>We received a payment that needs a quick check by our team. We’ll call you shortly — or call us at <a href={TEL_HREF}>{NEGOCIO.telefono.visible}</a>.</p>
+    </div>
+
+    <div class="estado estado--mal" data-estado="error" hidden>
+      <span class="estado__icono estado__icono--mal"><Icono nombre="cerrar" /></span>
+      <h1 class="estado__titulo" data-dato="error-titulo">We couldn’t find that reservation</h1>
+      <p data-dato="error-texto">Please check the link, or call us at <a href={TEL_HREF}>{NEGOCIO.telefono.visible}</a>.</p>
+      <div class="estado__acciones">
+        <a class="btn" href="/reservations/">Go to reservations</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { iniciarConfirmacion } from '../../../scripts/confirmacion';
+  iniciarConfirmacion();
+</script>
+
+<style>
+  :global(.confirmacion__papel) {
+    margin-bottom: -6px;
+  }
+
+  .confirmacion {
+    display: grid;
+    justify-items: center;
+    padding-block: clamp(32px, 7vw, 80px) clamp(56px, 9vw, 110px);
+    min-height: 60svh;
+  }
+
+  .estado {
+    display: grid;
+    justify-items: center;
+    gap: 14px;
+    max-width: 620px;
+    text-align: center;
+  }
+
+  .estado > p {
+    color: var(--texto-suave);
+    font-size: 1.06rem;
+  }
+
+  .estado__titulo {
+    font-family: var(--f-display);
+    font-weight: 400;
+    font-size: clamp(1.9rem, 6vw, 3rem);
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .estado__icono {
+    display: grid;
+    place-items: center;
+    width: 76px;
+    height: 76px;
+    border-radius: 22px;
+    color: #fff;
+  }
+
+  .estado__icono :global(svg) {
+    width: 40px;
+    height: 40px;
+    stroke-width: 2.4;
+  }
+
+  .estado__icono--ok {
+    background: var(--c-verde);
+    box-shadow: 0 0 0 4px var(--fondo), 0 0 0 6px var(--c-rojo);
+  }
+
+  .estado__icono--mal {
+    background: var(--c-rojo);
+  }
+
+  .estado__icono--reloj {
+    background: #b07d00;
+  }
+
+  .estado__icono--espera {
+    border: 6px solid rgb(0 104 71 / 0.2);
+    border-top-color: var(--c-verde);
+    border-radius: 50%;
+    width: 58px;
+    height: 58px;
+    animation: girar 0.9s linear infinite;
+  }
+
+  @keyframes girar {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Boleto de la reserva */
+  .ticket {
+    width: 100%;
+    margin-top: 8px;
+    overflow: hidden;
+    border-radius: var(--radio-tarjeta);
+    background: var(--tarjeta);
+    border: 1.5px solid var(--tarjeta-borde);
+    box-shadow: var(--tarjeta-sombra);
+    text-align: left;
+  }
+
+  .ticket .tricolor {
+    height: 6px;
+  }
+
+  .ticket__codigo {
+    padding: 16px 20px 6px;
+    font-family: var(--f-label);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--texto-suave);
+  }
+
+  .ticket__codigo strong {
+    display: block;
+    font-family: var(--f-display);
+    font-weight: 400;
+    font-size: 1.9rem;
+    letter-spacing: 0.04em;
+    color: var(--texto);
+  }
+
+  .ticket__datos {
+    display: grid;
+    margin: 0;
+    padding: 6px 20px 12px;
+  }
+
+  .ticket__datos > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding-block: 9px;
+    border-bottom: 1px dashed var(--linea);
+  }
+
+  .ticket__datos dt {
+    font-family: var(--f-label);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--texto-suave);
+  }
+
+  .ticket__datos dd {
+    margin: 0;
+    text-align: right;
+    font-weight: 600;
+    white-space: pre-line;
+  }
+
+  .ticket__resto dd {
+    color: var(--c-rojo-texto);
+    font-family: var(--f-label);
+    font-size: 1.3rem;
+  }
+
+  .ticket__lugar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px 16px;
+    font-size: 0.92rem;
+    color: var(--texto-suave);
+  }
+
+  .ticket__lugar :global(svg) {
+    width: 18px;
+    height: 18px;
+    flex: none;
+  }
+
+  .estado__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 6px;
+  }
+
+  .estado__nota {
+    font-size: 0.95rem;
+  }
+</style>

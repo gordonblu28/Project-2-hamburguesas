@@ -1,0 +1,9 @@
+// Solo para tests/integracion/: el Worker real con la configuración de prueba y una D1 local.
+{
+  "name": "rodeo-prueba",
+  "main": "worker-prueba.ts",
+  "compatibility_date": "2026-10-01",
+  "assets": { "directory": "../../dist", "binding": "ASSETS", "run_worker_first": ["/api/*"], "html_handling": "auto-trailing-slash", "not_found_handling": "404-page" },
+  "d1_databases": [{ "binding": "DB", "database_name": "rodeo-prueba", "database_id": "00000000-0000-0000-0000-000000000001", "migrations_dir": "../../migrations" }],
+  "rules": [{ "type": "Text", "globs": ["**/*.yaml"], "fallthrough": true }]
+}

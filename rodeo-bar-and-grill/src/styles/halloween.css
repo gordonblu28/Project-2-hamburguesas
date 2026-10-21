@@ -41,6 +41,14 @@ html[data-tema='halloween'] {
   --hondo-resalte: var(--n-naranja);
   --cabecera-fondo: rgb(18 10 26 / 0.74);
   --dock-fondo: rgb(18 10 26 / 0.92);
+  /* La decoración mexicana (papel picado, grecas) toma la paleta de la noche. */
+  --mx-verde: var(--n-morado-luz);
+  --mx-blanco: var(--n-luna);
+  --mx-rojo: var(--n-naranja);
+  --mx-amarillo: var(--n-naranja);
+  --tarjeta: var(--n-noche);
+  --tarjeta-borde: rgb(239 228 208 / 0.16);
+  --tarjeta-sombra: 0 18px 36px -24px rgb(0 0 0 / 0.8);
   --velo: radial-gradient(70% 55% at 50% 55%, var(--n-morado), var(--n-carbon) 70%);
   --grano-opacidad: 0.06;
   --grano-mezcla: overlay;

@@ -1,9 +1,8 @@
 ---
-// Pie de página real: dirección, teléfono, horario, redes y navegación, con el logo oficial.
-// Toma sus colores de los tokens --hondo*, así en Halloween se vuelve nocturno sin tocarlo.
-import { Image } from 'astro:assets';
-import logo from '../assets/marca/logo.jpg';
-import Silueta from './Silueta.astro';
+// Pie de página real: dirección, teléfono, horario, redes y navegación, con el logo oficial a
+// color. Toma sus colores de los tokens --hondo* (el verde del logo), así en Halloween se vuelve
+// nocturno sin tocarlo.
+import Marca from './Marca.astro';
 import Icono from './Icono.astro';
 import { NEGOCIO, MAPAS, TEL_HREF, TEMPORADA } from '../lib/datos';
 
@@ -15,14 +14,15 @@ const enlaces = [
   { href: '/menu/', texto: 'Menu' },
   { href: '/favorites/', texto: 'Favorites' },
   { href: '/visit/', texto: 'Visit' },
+  { href: '/reservations/', texto: 'Reservations' },
 ];
 ---
 
 <footer class="pie">
+  <div class="greca pie__greca" aria-hidden="true"></div>
   <div class="wrap pie__cabeza">
     <a class="pie__nombre" href="/" aria-label={`${NEGOCIO.nombre} — Home`}>
-      <Silueta class="pie__jinete" />
-      <span class="display" aria-hidden="true">The Rodeo</span>
+      <Marca alto={110} decorativa prioridad={false} />
     </a>
     <p class="pie__lema">
       <span class="serif">Bar &amp; Grill</span>
@@ -93,9 +93,6 @@ const enlaces = [
   </div>
 
   <div class="wrap pie__base">
-    <figure class="pie__logo">
-      <Image src={logo} alt={`${NEGOCIO.nombre} logo`} width={168} densities={[1, 2]} quality={82} loading="lazy" />
-    </figure>
     <p>© {anio} {NEGOCIO.nombre}</p>
     <p>
       Website by <a href="https://tempozzstudio.com" rel="noopener" target="_blank">Tempozz Studio</a>
@@ -115,6 +112,14 @@ const enlaces = [
     padding: clamp(48px, 8vw, 96px) 0 calc(var(--dock-h) + var(--safe-b) + 24px);
   }
 
+  .pie__greca {
+    position: absolute;
+    top: 10px;
+    left: 0;
+    right: 0;
+    opacity: 0.5;
+  }
+
   .pie a {
     color: inherit;
   }
@@ -130,24 +135,22 @@ const enlaces = [
   }
 
   .pie__nombre {
-    display: flex;
-    align-items: end;
-    gap: clamp(10px, 2vw, 22px);
+    display: block;
+    max-width: 100%;
     text-decoration: none;
   }
 
-  .pie__nombre :global(.pie__jinete) {
-    width: clamp(64px, 11vw, 120px);
-    flex: none;
-    padding-bottom: 4px;
-    border-bottom: 2px solid currentColor;
-    box-sizing: content-box;
+  /* En el teléfono el logo cabe a lo ancho. */
+  .pie__nombre :global(.marca__img) {
+    max-width: min(100%, 274px);
+    height: auto;
   }
 
-  /* En el teléfono "The / Rodeo" se apila como un letrero. */
-  .pie__nombre .display {
-    font-size: clamp(2.8rem, 12vw, 7.5rem);
-    line-height: 0.84;
+  @media (min-width: 900px) {
+    .pie__nombre :global(.marca__img) {
+      max-width: none;
+      height: 110px;
+    }
   }
 
   .pie__lema {
@@ -293,17 +296,6 @@ const enlaces = [
     border-top: 1px solid var(--hondo-linea);
     font-size: 0.86rem;
     color: var(--hondo-suave);
-  }
-
-  .pie__logo {
-    margin: 0;
-    padding: 5px;
-    border: 1px solid var(--hondo-linea);
-  }
-
-  .pie__logo :global(img) {
-    width: 132px;
-    height: auto;
   }
 
   .pie__arriba {

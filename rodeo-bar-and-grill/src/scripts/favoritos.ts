@@ -1,5 +1,5 @@
-// Favoritos: un plato a la vez. Al cambiar, el lazo "lanza" el plato saliente girando y atrapa
-// el siguiente; el nombre gigante del fondo se desliza. Con el cursor, el plato gana profundidad
+// Favoritos: un plato a la vez. Al cambiar, la tarjeta saliente sale volando ladeada y la
+// siguiente entra y se asienta con un rebote; el nombre gigante del fondo se desliza. Con el cursor, el plato gana profundidad
 // (inclinación 3D y brillo); en el teléfono se arrastra con el dedo.
 import { gsap } from 'gsap';
 import { movimientoActivo } from './movimiento';
@@ -30,7 +30,6 @@ export async function iniciarFavoritos() {
   const piezas = (d: HTMLElement) => ({
     plato: d.querySelector<HTMLElement>('[data-plato]')!,
     fondo: d.querySelector<HTMLElement>('.favorito__fondo')!,
-    lazo: d.querySelector<SVGElement>('.lazo-trazo'),
     info: Array.from(d.querySelectorAll<HTMLElement>('[data-info] > *')),
     precios: Array.from(d.querySelectorAll<HTMLElement>('.favorito__precio, .favorito__precios strong')),
   });
@@ -46,16 +45,15 @@ export async function iniciarFavoritos() {
   }
 
   function entrada(d: HTMLElement, dir: number, primera = false) {
-    const { plato, fondo, lazo, info, precios } = piezas(d);
+    const { plato, fondo, info, precios } = piezas(d);
     const tl = gsap.timeline({ defaults: { overwrite: 'auto' } });
     tl.fromTo(fondo, { xPercent: 22 * dir, opacity: 0 }, { xPercent: 0, opacity: 1, duration: 0.9, ease: 'expo.out' }, 0)
       .fromTo(
         plato,
-        { x: () => (primera ? 0 : window.innerWidth * 0.55 * dir), rotate: primera ? -90 : 160 * dir, scale: 0.55, opacity: 0 },
-        { x: 0, rotate: 0, scale: 1, opacity: 1, duration: 0.95, ease: 'elastic.out(1, 0.6)' },
+        { x: () => (primera ? 0 : window.innerWidth * 0.55 * dir), y: primera ? 30 : 0, rotate: primera ? -8 : 14 * dir, scale: 0.7, opacity: 0 },
+        { x: 0, y: 0, rotate: 0, scale: 1, opacity: 1, duration: 0.95, ease: 'elastic.out(1, 0.6)' },
         0.04,
       )
-      .fromTo(lazo, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.55, ease: 'power2.out' }, 0.18)
       .fromTo(
         info,
         { opacity: 0, clipPath: dir > 0 ? 'inset(0 0 0 100%)' : 'inset(0 100% 0 0)', x: 24 * dir },
@@ -91,7 +89,7 @@ export async function iniciarFavoritos() {
     const s = piezas(sale);
     await gsap
       .timeline()
-      .to(s.plato, { x: -window.innerWidth * 0.5 * dir, rotate: -150 * dir, scale: 0.6, opacity: 0, duration: 0.42, ease: 'power3.in' })
+      .to(s.plato, { x: -window.innerWidth * 0.5 * dir, rotate: -18 * dir, scale: 0.7, opacity: 0, duration: 0.42, ease: 'power3.in' })
       .to(s.fondo, { xPercent: -25 * dir, opacity: 0, duration: 0.35, ease: 'power2.in' }, 0)
       .to(s.info, { opacity: 0, x: -20 * dir, duration: 0.22, ease: 'power2.in', stagger: 0.02 }, 0)
       .then();

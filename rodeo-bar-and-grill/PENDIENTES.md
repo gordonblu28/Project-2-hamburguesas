@@ -2,7 +2,18 @@
 
 Revisión del 2026-10-20. Fuentes: brief del cliente (TXT del 2026-10-19), 10 imágenes de Google Drive (`PROYECTOS/RODEO`: 6 fotos del menú impreso, 2 de la carta de bar y 2 versiones del logo) y la bio pública de Instagram. **El TXT no trae productos ni precios**: el menú se transcribió de las fotos del menú impreso.
 
-## 1. Datos que debe aportar el cliente
+## 0. Rediseño v3 (2026-10-21): lo que falta para que las reservaciones funcionen
+
+Todo el código está hecho y probado (ver "Reservaciones en línea" en README.md). Las reservas en línea quedan **apagadas** — la página lo dice y pide llamar — hasta completar:
+
+- [ ] **Precio de la reserva** (`src/data/reservaciones.yaml` → `tarifa.tipo` y `tarifa.monto`). El cliente pidió un depósito del 50 %, pero el proyecto no tenía ningún precio de reserva y **no se inventó**: ¿cuánto cuesta reservar, por persona o por mesa? (No es el 50 % de la comida.)
+- [ ] **Horario de reservas por día** (`horario`) — depende del horario del local, que sigue pendiente (sección 1).
+- [ ] **Cupo** de personas con reserva al mismo tiempo (`cupo_personas`, hoy 40 provisional), duración de una mesa (`duracion_minutos`, hoy 90), grupo máximo en línea (`personas_max`, hoy 12), anticipación mínima (2 h) y días hacia adelante (60): confirmar.
+- [ ] **Cuenta de Stripe del restaurante** y sus claves (`STRIPE_SECRET_KEY`), y el webhook (`STRIPE_WEBHOOK_SECRET`). Política de reembolso del depósito por cancelación o no-show (hoy: se reembolsa a mano desde Stripe; el sitio dice "call us to change or cancel").
+- [ ] **Cuenta de Cloudflare**: publicar como **Worker** (Opción B), crear la base D1 y poner su `database_id` en `wrangler.jsonc`, y la clave del panel `ADMIN_TOKEN`. Recomendado: Cloudflare Access para `/reservations/admin/` y una regla de rate limiting para `POST /api/reservations`.
+- [ ] ¿Quieren **correos de confirmación** propios o aviso al restaurante por correo/SMS? Requiere un servicio de correo (alcance aparte). Hoy: Stripe envía el recibo del pago; el personal ve las reservas en el panel.
+- [ ] **Fotos reales de los platos**: las tarjetas nuevas muestran las fotos más grandes que antes; los recortes de 50–150 px del menú impreso se ven suaves. Con fotos reales el diseño se ve nítido sin cambios.
+
 
 - [ ] **Horario de atención.** En Instagram hay una publicación "Business Hours", pero verla exige iniciar sesión; no se publicó nada. Mientras tanto la página Visit pide llamar.
 - [ ] **Bebidas y especiales de Halloween**: nombre, descripción, precio y foto real de cada uno. La página `/halloween/` está lista: "Halloween Specials" muestra un aviso neutro mientras tanto y "Featured Drinks" aparece sola cuando haya bebidas con foto. Se probó con datos de ejemplo (retirados) en escritorio y teléfono.
@@ -17,7 +28,7 @@ Revisión del 2026-10-20. Fuentes: brief del cliente (TXT del 2026-10-19), 10 im
 - [ ] ¿Los precios incluyen impuestos? Hoy solo dice "Prices in US dollars; menu items and prices may change".
 - [ ] ¿Se publica el **mariachi en vivo**? (destacado "LIVE MARIACHI" en Instagram; no se pudo confirmar el día).
 - [ ] ¿Se acepta el crédito "Website by Tempozz Studio"? Desde el rediseño está en el pie de todas las páginas.
-- [ ] ¿Aprueba el cliente el uso del jinete del logo como **silueta negra** (marca de la cabecera, del inicio y de Halloween)? Es un recorte del mismo dibujo, sin rediseñarlo; el logo oficial a color sigue en el pie y en la imagen para redes.
+- [x] ~~¿Silueta negra del jinete?~~ Resuelto en la v3: el cliente pidió el logo a todo color. La cabecera, el pie, los favicons y todas las apariciones del jinete usan ahora los colores originales.
 
 ## 2. Platos con datos ilegibles en la foto (se publicaron sin inventar)
 
@@ -65,7 +76,7 @@ No son datos del negocio; son textos de interfaz:
 
 ## 6. Alcance que se cotiza aparte
 
-Pedidos en línea, carrito o pagos · reservas con sistema · versión en español · sesión de fotos · panel para editar el menú · integración con POS o plataformas de delivery.
+Pedidos de comida en línea o carrito · correos/SMS de confirmación de reservas · asignación de mesas concretas · versión en español · sesión de fotos · panel para editar el menú · integración con POS o plataformas de delivery.
 
 ## 7. Rediseño del 2026-10-20 (v2): decisiones tomadas
 

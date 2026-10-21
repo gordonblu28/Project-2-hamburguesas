@@ -1,0 +1,46 @@
+---
+// El jinete del logo, a todo color y tal como está dibujado (scripts/preparar-imagenes.mjs lo
+// separa del JPG con fondo transparente, sin recolorearlo). Es decorativo: el nombre del negocio
+// siempre está escrito al lado, así que los lectores de pantalla no lo anuncian.
+// La clase se aplica al envoltorio: el tamaño lo da el ancho de ese envoltorio.
+import { Image } from 'astro:assets';
+import jinete from '../assets/marca/jinete.png';
+
+interface Props {
+  class?: string;
+  /** Ancho máximo en px CSS al que se muestra (para elegir la resolución). */
+  ancho?: number;
+  prioridad?: boolean;
+}
+
+const { class: clase, ancho = 120, prioridad = false } = Astro.props;
+const anchos = [...new Set([ancho, ancho * 2].map((n) => Math.min(Math.round(n), jinete.width)))];
+---
+
+<span class:list={['jinete', clase]} aria-hidden="true">
+  <Image
+    src={jinete}
+    alt=""
+    widths={anchos}
+    sizes={`${ancho}px`}
+    format="webp"
+    quality={86}
+    loading={prioridad ? 'eager' : 'lazy'}
+    decoding="async"
+    class="jinete__img"
+  />
+</span>
+
+<style>
+  .jinete {
+    display: block;
+  }
+
+  .jinete__img {
+    display: block;
+    width: 100%;
+    height: auto;
+    /* Sombra suave que lo despega de cualquier fondo, sin cambiar sus colores. */
+    filter: drop-shadow(0 6px 10px rgb(1 49 33 / 0.22));
+  }
+</style>

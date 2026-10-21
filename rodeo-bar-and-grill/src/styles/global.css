@@ -1,9 +1,11 @@
 /* ────────────────────────────────────────────────────────────────
    The Rodeo Bar And Grill — sistema visual principal
-   Western contemporáneo: beige cálido, blanco cálido y negro profundo,
-   con arena y cuero para dar profundidad. Tipografía de madera de cartel
-   (Ultra) con una serif editorial en cursiva (Instrument Serif), Barlow
-   Condensed para señalización y Barlow para leer.
+   Cantina mexicana contemporánea: beige cálido (adobe), blanco cálido y
+   negro profundo de base, con los colores del logo y de la bandera de
+   México como acentos: verde, blanco y rojo, el verde hondo del fondo del
+   logo para las superficies oscuras y su amarillo para detalles sobre ellas.
+   Tipografía de madera de cartel (Ultra) con una serif editorial en cursiva
+   (Instrument Serif), Barlow Condensed para señalización y Barlow para leer.
 
    Los componentes usan solo los tokens semánticos (--fondo, --texto…).
    La página de Halloween los redefine en src/styles/halloween.css, así
@@ -23,8 +25,15 @@
   --c-cuero: #5f5242;
   --c-cuerda: #b99c6b;
   --c-cuerda-oscura: #7d6644;
-  /* Único acento cálido del sitio principal: señala la temporada (Halloween). 5.6:1 sobre beige. */
+  /* Acento de la temporada (Halloween). 5.6:1 sobre beige. */
   --c-ascua: #8c3b16;
+  /* México: verde y rojo de la bandera, el verde hondo y el amarillo del logo.
+     Verde 6.8:1 con blanco; rojo 5.9:1 con blanco; para texto rojo sobre beige, --c-rojo-texto (5.2:1). */
+  --c-verde: #006847;
+  --c-verde-hondo: #013121;
+  --c-rojo: #c8102e;
+  --c-rojo-texto: #b30d27;
+  --c-amarillo: #ffe600;
 
   /* Tokens semánticos */
   --fondo: var(--c-beige);
@@ -34,15 +43,28 @@
   --texto-suave: var(--c-cuero);
   --linea: rgb(20 18 15 / 0.15);
   --linea-fuerte: var(--c-negro);
-  --acento: var(--c-negro);
-  --sobre-acento: var(--c-blanco);
+  --acento: var(--c-verde);
+  --sobre-acento: #fff;
   --resalte: var(--c-ascua);
   --cuerda: var(--c-cuerda);
   --cuerda-oscura: var(--c-cuerda-oscura);
-  --hondo: var(--c-negro);
+  --hondo: var(--c-verde-hondo);
   --hondo-texto: var(--c-beige);
-  --hondo-suave: #a99a80;
+  --hondo-suave: #9fb8a8;
   --hondo-linea: rgb(231 220 200 / 0.16);
+  --hondo-resalte: var(--c-amarillo);
+  /* Decoración mexicana (papel picado, grecas, talavera). Halloween la redefine en su paleta. */
+  --mx-verde: var(--c-verde);
+  --mx-blanco: #fffdf8;
+  --mx-rojo: var(--c-rojo);
+  --mx-amarillo: var(--c-amarillo);
+  --tricolor: linear-gradient(90deg, var(--mx-verde) 0 33.4%, var(--mx-blanco) 33.4% 66.6%, var(--mx-rojo) 66.6%);
+  /* Tarjetas de platillos */
+  --tarjeta: var(--c-blanco);
+  --tarjeta-borde: rgb(0 104 71 / 0.28);
+  --tarjeta-sombra: 0 18px 36px -24px rgb(1 49 33 / 0.55);
+  --radio-tarjeta: 18px;
+  --radio-foto: 14px;
   --cabecera-fondo: rgb(231 220 200 / 0.84);
   --dock-fondo: rgb(250 246 238 / 0.94);
   --velo: var(--c-beige);
@@ -65,7 +87,7 @@
   --gutter: clamp(16px, 4.5vw, 48px);
   --header-h: 64px;
   --dock-h: 68px;
-  --radius: 4px;
+  --radius: 6px;
 
   --safe-b: env(safe-area-inset-bottom, 0px);
   color-scheme: light;
@@ -317,7 +339,7 @@ main {
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: var(--texto);
+  background: var(--c-rojo);
   transform: scaleY(0);
   transform-origin: 50% 100%;
   transition: transform var(--t-base) var(--ease-out);
@@ -325,7 +347,8 @@ main {
 
 @media (hover: hover) {
   .btn--ghost:hover {
-    color: var(--fondo);
+    color: #fff;
+    border-color: var(--c-rojo);
     box-shadow: none;
   }
 
@@ -401,14 +424,13 @@ main {
 }
 
 .chip--favorite {
-  background: var(--texto);
-  color: var(--fondo);
+  background: var(--c-rojo);
+  color: #fff;
 }
 
 .chip--new {
-  background: var(--fondo-alto);
-  color: var(--texto);
-  box-shadow: inset 0 0 0 1.5px var(--texto);
+  background: var(--c-verde);
+  color: #fff;
 }
 
 .chip--angus {
@@ -420,6 +442,44 @@ main {
   background: transparent;
   color: var(--texto);
   box-shadow: inset 0 0 0 1.5px var(--c-arena-oscura);
+}
+
+/* Confeti de bienvenida (src/scripts/confeti.ts): encima del contenido, debajo de la cabecera,
+   la barra inferior y los botones flotantes; nunca recibe toques ni clics. */
+.confeti {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* ── Motivos mexicanos ──
+   Franja tricolor (verde, blanco y rojo), greca escalonada como separador de secciones y
+   azulejo de talavera para fondos y fichas sin foto. Todo con los tokens --mx-*. */
+.tricolor {
+  height: 4px;
+  background: var(--tricolor);
+}
+
+.greca {
+  --greca-color: var(--mx-verde);
+  height: 14px;
+  background-color: var(--greca-color);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='14'%3E%3Cpath d='M0 14V8h4V4h4V0h12v4h4v4h4v6h-4v-4h-4V6h-4V2h-4v4h-4v4H4v4z'/%3E%3C/svg%3E") 0 0 / 28px 14px repeat-x;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='14'%3E%3Cpath d='M0 14V8h4V4h4V0h12v4h4v4h4v6h-4v-4h-4V6h-4V2h-4v4h-4v4H4v4z'/%3E%3C/svg%3E") 0 0 / 28px 14px repeat-x;
+}
+
+.greca--roja {
+  --greca-color: var(--mx-rojo);
+}
+
+/* Azulejo de talavera: flor de cuatro pétalos con esquinas, en verde y rojo sobre crema. */
+.talavera {
+  background-color: #f6efe2;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg fill='none' stroke='%23006847' stroke-width='1.6' opacity='.55'%3E%3Cpath d='M24 8c4 6 4 10 0 16-4-6-4-10 0-16zM24 40c4-6 4-10 0-16-4 6-4 10 0 16zM8 24c6-4 10-4 16 0-6 4-10 4-16 0zM40 24c-6-4-10-4-16 0 6 4 10 4 16 0z'/%3E%3Cpath d='M0 6a6 6 0 0 0 6-6M42 0a6 6 0 0 0 6 6M48 42a6 6 0 0 0-6 6M6 48a6 6 0 0 0-6-6'/%3E%3C/g%3E%3Ccircle cx='24' cy='24' r='3' fill='%23c8102e' opacity='.7'/%3E%3C/svg%3E");
+  background-size: 48px 48px;
 }
 
 /* Contenedor de página. */

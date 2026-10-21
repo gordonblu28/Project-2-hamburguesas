@@ -15,7 +15,11 @@
     "verificar": "node scripts/verificar-menu.mjs",
     "zip:codigo": "node scripts/empaquetar.mjs --codigo",
     "deploy:pages": "npx wrangler@4 pages deploy dist --project-name rodeo-bar-and-grill",
-    "deploy:workers": "npx wrangler@4 deploy"
+    "deploy:workers": "npx wrangler@4 deploy",
+    "test": "node --test tests/*.test.ts",
+    "test:integracion": "node --test --test-concurrency=1 tests/integracion/*.test.ts",
+    "dev:worker": "npx wrangler@4 dev",
+    "db:migrar": "npx wrangler@4 d1 migrations apply rodeo-reservaciones --remote"
   },
   "dependencies": {
     "@fontsource/barlow": "5.3.0",

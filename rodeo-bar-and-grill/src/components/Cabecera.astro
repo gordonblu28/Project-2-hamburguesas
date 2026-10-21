@@ -3,7 +3,7 @@ import Marca from './Marca.astro';
 import Icono from './Icono.astro';
 import { NEGOCIO, TEL_HREF, TEMPORADA } from '../lib/datos';
 
-export type Pagina = 'inicio' | 'menu' | 'favoritos' | 'visita' | 'temporada' | undefined;
+export type Pagina = 'inicio' | 'menu' | 'favoritos' | 'visita' | 'reservas' | 'temporada' | undefined;
 interface Props {
   actual?: Pagina;
 }
@@ -14,13 +14,14 @@ const enlaces = [
   { href: '/menu/', texto: 'Menu', id: 'menu' },
   { href: '/favorites/', texto: 'Favorites', id: 'favoritos' },
   { href: '/visit/', texto: 'Visit', id: 'visita' },
+  { href: '/reservations/', texto: 'Reserve', id: 'reservas' },
 ] as const;
 ---
 
 <header class="cabecera">
   <div class="cabecera__fila">
     <a class="cabecera__logo" href="/" aria-label={`${NEGOCIO.nombre} — Home`} aria-current={actual === 'inicio' ? 'page' : undefined}>
-      <Marca />
+      <Marca alto={56} decorativa />
     </a>
 
     <nav class="cabecera__nav" aria-label="Main">
@@ -77,6 +78,17 @@ const enlaces = [
     color: var(--texto);
   }
 
+  /* Franja tricolor bajo la cabecera: verde, blanco y rojo. */
+  .cabecera::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 3px;
+    background: var(--tricolor);
+  }
+
   .cabecera__fila {
     height: 100%;
     max-width: 1320px;
@@ -93,10 +105,10 @@ const enlaces = [
     text-decoration: none;
   }
 
-  /* El jinete corcovea al pasar el cursor por la marca. */
+  /* El logo se ladea apenas, como un letrero que se mece, al pasar el cursor. */
   @media (hover: hover) {
-    .cabecera__logo:hover :global(.marca__insignia) {
-      transform: rotate(-7deg) translateY(-2px);
+    .cabecera__logo:hover :global(.marca) {
+      transform: rotate(-2deg) scale(1.03);
     }
   }
 

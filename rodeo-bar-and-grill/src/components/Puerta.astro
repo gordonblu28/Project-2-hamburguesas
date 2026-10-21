@@ -5,14 +5,14 @@
 //   en la página nueva se abren girando hacia afuera, como el cajón de salida del rodeo.
 // · Velo, al cruzar entre el sitio principal y Halloween: cae la noche (o vuelve el día) en un
 //   círculo que se abre desde donde se tocó, y en la página nueva se disuelve.
-import Silueta from './Silueta.astro';
+import Jinete from './Jinete.astro';
 ---
 
 <div class="puerta" aria-hidden="true">
   <div class="puerta__hoja puerta__hoja--izq"></div>
   <div class="puerta__hoja puerta__hoja--der"></div>
   <div class="puerta__cerrojo">
-    <Silueta class="puerta__jinete" />
+    <Jinete class="puerta__jinete" ancho={64} prioridad />
   </div>
 </div>
 <div class="velo" aria-hidden="true"></div>

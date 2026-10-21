@@ -92,16 +92,16 @@ export function iniciarMenu() {
 
     const filasSale = filasVisibles(sale, 8);
     const letrasSale = sale.querySelectorAll('.panel__titulo .letra');
-    const medSale = sale.querySelector('.panel__medallon .medallon');
+    const medSale = sale.querySelector('.panel__foto .foto');
 
     transicion = gsap
       .timeline({ defaults: { overwrite: 'auto' } })
-      // Salida rápida: las filas se van hacia el lado contrario y el plato gira fuera del lazo.
+      // Salida rápida: las tarjetas se van hacia el lado contrario y la foto se ladea y se encoge.
       .to(filasSale, { x: -36 * dir, opacity: 0, duration: 0.2, ease: 'power2.in', stagger: 0.018 })
       .to(letrasSale, { yPercent: 70, rotate: (i) => (i % 2 ? 14 : -14), opacity: 0, duration: 0.2, ease: 'power2.in', stagger: 0.008 }, 0)
-      .to(medSale, { rotate: 80 * dir, scale: 0.7, opacity: 0, duration: 0.24, ease: 'power3.in' }, 0)
+      .to(medSale, { rotate: -6 * dir, scale: 0.85, opacity: 0, duration: 0.24, ease: 'power3.in' }, 0)
       .add(() => {
-        // Solo lo animado: el medallón guarda su tamaño en una variable CSS en línea (--lado).
+        // Solo lo animado: la foto guarda su proporción en una variable CSS en línea.
         gsap.set([...filasSale, ...Array.from(letrasSale), medSale].filter(Boolean), {
           clearProps: 'transform,opacity',
         });
@@ -110,14 +110,13 @@ export function iniciarMenu() {
       });
   }
 
-  // Entrada: letras que corcovean, lazo que se dibuja, filas que se tiran con la cuerda y
-  // precios que caen como sello de hierro (dejan una sombra de tinta que se seca).
+  // Entrada: letras que corcovean, la foto que cae ladeada y se asienta, tarjetas que suben en
+  // cascada y precios que caen como sello (dejan una sombra de tinta que se seca).
   function entrada(panel: HTMLElement, dir: number) {
     const letras = panel.querySelectorAll('.panel__titulo .letra');
-    const med = panel.querySelector('.panel__medallon .medallon');
-    const lazo = panel.querySelector('.panel__medallon .lazo-trazo');
+    const med = panel.querySelector('.panel__foto .foto');
     const filas = filasVisibles(panel, 10);
-    const precios = filas.map((f) => f.querySelector('.fila__precio')).filter(Boolean);
+    const precios = filas.map((f) => f.querySelector('.platillo__precio')).filter(Boolean);
     const tl = gsap.timeline();
     tl.fromTo(
       letras,
@@ -127,15 +126,14 @@ export function iniciarMenu() {
     if (med)
       tl.fromTo(
         med,
-        { rotate: -100 * dir, scale: 0.55, opacity: 0 },
-        { rotate: 0, scale: 1, opacity: 1, duration: 0.8, ease: 'elastic.out(1, 0.55)', clearProps: 'transform,opacity' },
+        { rotate: 8 * dir, y: -24, scale: 0.85, opacity: 0 },
+        { rotate: 0, y: 0, scale: 1, opacity: 1, duration: 0.8, ease: 'elastic.out(1, 0.6)', clearProps: 'transform,opacity' },
         0,
       );
-    if (lazo) tl.fromTo(lazo, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.5, ease: 'power2.out', clearProps: 'all' }, 0.08);
     tl.fromTo(
       filas,
-      { x: 44 * dir, opacity: 0, clipPath: dir > 0 ? 'inset(0 0 0 100%)' : 'inset(0 100% 0 0)' },
-      { x: 0, opacity: 1, clipPath: 'inset(0 0% 0 0%)', duration: 0.5, ease: 'power3.out', stagger: 0.045, clearProps: 'all' },
+      { x: 30 * dir, y: 24, opacity: 0 },
+      { x: 0, y: 0, opacity: 1, duration: 0.55, ease: 'power3.out', stagger: 0.05, clearProps: 'all' },
       0.06,
     )
       .fromTo(
@@ -216,7 +214,7 @@ export function iniciarMenu() {
   const listaResultados = menu.querySelector<HTMLElement>('[data-resultados-lista]')!;
   const tituloResultados = menu.querySelector<HTMLElement>('[data-resultados-titulo]')!;
   const vacio = menu.querySelector<HTMLElement>('[data-resultados-vacio]')!;
-  const filas = Array.from(menu.querySelectorAll<HTMLElement>('.panel .fila'));
+  const filas = Array.from(menu.querySelectorAll<HTMLElement>('.panel .platillo'));
   botonLupa.hidden = false;
 
   function abrirBuscador() {
@@ -276,7 +274,7 @@ export function iniciarMenu() {
   // ── Ficha ampliada ──
   const dialogo = menu.querySelector<HTMLDialogElement>('[data-ficha]')!;
   const hoja = dialogo.querySelector<HTMLElement>('[data-ficha-hoja]')!;
-  const fichaMedallon = dialogo.querySelector<HTMLElement>('[data-ficha-medallon]')!;
+  const fichaFoto = dialogo.querySelector<HTMLElement>('[data-ficha-foto]')!;
   const fichaInfo = dialogo.querySelector<HTMLElement>('[data-ficha-info]')!;
   const pasos = Array.from(dialogo.querySelectorAll<HTMLButtonElement>('[data-ficha-paso]'));
   let filaAbierta: HTMLElement | null = null;
@@ -284,27 +282,29 @@ export function iniciarMenu() {
   let porHistorial = false;
   const esMovil = () => window.matchMedia('(max-width: 759px)').matches;
 
-  const listaDe = (fila: HTMLElement) => Array.from((fila.closest('.panel__lista') ?? cuerpo).querySelectorAll<HTMLElement>('.fila'));
+  const listaDe = (fila: HTMLElement) => Array.from((fila.closest('.panel__lista') ?? cuerpo).querySelectorAll<HTMLElement>('.platillo'));
 
   function llenarFicha(fila: HTMLElement) {
     filaAbierta = fila;
-    fichaMedallon.replaceChildren();
+    fichaFoto.replaceChildren();
     const plantilla = fila.querySelector<HTMLTemplateElement>('template[data-foto]');
     if (plantilla) {
-      fichaMedallon.append(plantilla.content.cloneNode(true));
+      fichaFoto.append(plantilla.content.cloneNode(true));
     } else {
       const emblema = menu!.querySelector<HTMLTemplateElement>(`template[data-emblema="${emblemaDe(fila)}"]`);
-      if (emblema) fichaMedallon.append(emblema.content.cloneNode(true));
-      const numero = fila.querySelector('.fila__numero')?.textContent?.trim();
-      const caja = fichaMedallon.querySelector('.medallon__emblema');
+      if (emblema) fichaFoto.append(emblema.content.cloneNode(true));
+      const numero = fila.querySelector('.platillo__numero')?.textContent?.trim();
+      const caja = fichaFoto.querySelector('.foto__insignia');
       if (caja && numero) {
         const s = document.createElement('span');
         s.textContent = `No. ${numero}`;
         caja.append(s);
       }
     }
-    const info = fila.querySelector('.fila__info')!.cloneNode(true) as HTMLElement;
-    const h3 = info.querySelector('.fila__nombre');
+    const info = fila.querySelector('.platillo__info')!.cloneNode(true) as HTMLElement;
+    // El precio va en el pie de la tarjeta; en la ficha, debajo del nombre.
+    const precio = fila.querySelector('.platillo__precio')?.cloneNode(true);
+    const h3 = info.querySelector('.platillo__nombre');
     if (h3) {
       h3.querySelectorAll('.visually-hidden').forEach((s) => s.remove());
       const h2 = document.createElement('h2');
@@ -312,7 +312,8 @@ export function iniciarMenu() {
       h2.id = 'ficha-titulo';
       h2.textContent = h3.textContent?.trim() ?? '';
       h3.replaceWith(h2);
-      const numero = fila.querySelector('.fila__numero')?.textContent?.trim();
+      if (precio) h2.after(precio);
+      const numero = fila.querySelector('.platillo__numero')?.textContent?.trim();
       if (numero) {
         const p = document.createElement('p');
         p.className = 'ficha__numero';
@@ -334,14 +335,12 @@ export function iniciarMenu() {
 
   function animarEntradaFicha() {
     if (!movimientoActivo()) return;
-    const med = fichaMedallon.querySelector('.medallon');
-    const lazo = fichaMedallon.querySelector('.lazo-trazo');
-    const piezas = fichaInfo.querySelectorAll('.fila__info > *');
+    const med = fichaFoto.querySelector('.foto');
+    const piezas = fichaInfo.querySelectorAll('.platillo__info > *');
     gsap
       .timeline()
       .fromTo(hoja, esMovil() ? { yPercent: 100 } : { scale: 0.92, opacity: 0, rotate: -1.5 }, { yPercent: 0, scale: 1, opacity: 1, rotate: 0, duration: 0.5, ease: 'expo.out', clearProps: 'all' })
-      .fromTo(med, { rotate: -120, scale: 0.6 }, { rotate: 0, scale: 1, duration: 0.8, ease: 'elastic.out(1, 0.55)', clearProps: 'transform' }, 0.08)
-      .fromTo(lazo, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.5, ease: 'power2.out', clearProps: 'all' }, 0.15)
+      .fromTo(med, { rotate: -6, y: 20, scale: 0.9 }, { rotate: 0, y: 0, scale: 1, duration: 0.8, ease: 'elastic.out(1, 0.6)', clearProps: 'transform' }, 0.08)
       .fromTo(piezas, { opacity: 0, clipPath: 'inset(0 100% 0 0)' }, { opacity: 1, clipPath: 'inset(0 0% 0 0)', duration: 0.45, ease: 'power3.out', stagger: 0.05, clearProps: 'all' }, 0.12);
   }
 
@@ -365,7 +364,7 @@ export function iniciarMenu() {
       dialogo.showModal();
       animarEntradaFicha();
     } else if (movimientoActivo()) {
-      gsap.fromTo(fichaMedallon, { opacity: 0, rotate: -30 }, { opacity: 1, rotate: 0, duration: 0.45, ease: 'back.out(2)', clearProps: 'all' });
+      gsap.fromTo(fichaFoto, { opacity: 0, rotate: -4 }, { opacity: 1, rotate: 0, duration: 0.45, ease: 'back.out(2)', clearProps: 'all' });
       gsap.fromTo(fichaInfo, { opacity: 0, x: 20 }, { opacity: 1, x: 0, duration: 0.35, ease: 'power3.out', clearProps: 'all' });
     }
     hoja.scrollTop = 0;
@@ -427,7 +426,7 @@ export function iniciarMenu() {
 
   menu.addEventListener('click', (e) => {
     const boton = (e.target as Element).closest('[data-abrir]');
-    const fila = boton?.closest<HTMLElement>('.fila');
+    const fila = boton?.closest<HTMLElement>('.platillo');
     if (fila && !dialogo.contains(fila)) abrirFicha(fila);
   });
 

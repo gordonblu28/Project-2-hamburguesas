@@ -1,7 +1,8 @@
 ---
 import Base from '../../layouts/Base.astro';
-import Fila from '../../components/Fila.astro';
-import Medallon from '../../components/Medallon.astro';
+import Platillo from '../../components/Platillo.astro';
+import Foto from '../../components/Foto.astro';
+import PapelPicado from '../../components/PapelPicado.astro';
 import Letras from '../../components/Letras.astro';
 import Icono, { type NombreIcono } from '../../components/Icono.astro';
 import { menuCompleto, foto } from '../../lib/menu';
@@ -34,6 +35,7 @@ const iconos: NombreIcono[] = ['estrella', 'margarita', 'coctel', 'cerveza', 'bo
   actual="menu"
   clase="pagina-menu"
 >
+  <PapelPicado class="menu__papel" cantidad={30} />
   <div class="menu" data-menu data-total={totalProductos} data-ruta-temporada={TEMPORADA.ruta}>
     <div class="menu__barra">
       <div class="wrap menu__barra-fila">
@@ -141,11 +143,13 @@ const iconos: NombreIcono[] = ['estrella', 'margarita', 'coctel', 'cerveza', 'bo
                   <Letras texto={c.data.nombre} />
                 </h2>
                 {c.data.nota && <p class="panel__nota">{c.data.nota}</p>}
-                <div class="panel__medallon" data-medallon-categoria>
-                  <Medallon
+                <div class="panel__foto" data-foto-categoria>
+                  <Foto
                     img={img}
                     alt={c.data.foto_alt ?? (img ? productos.find((p) => p.data.foto === c.data.foto)?.data.nombre ?? c.data.nombre : '')}
-                    lado={220}
+                    ancho={300}
+                    proporcion={0.7}
+                    limitar
                     icono={c.data.icono ?? 'estrella'}
                     marca={img ? undefined : c.data.corto}
                   />
@@ -155,7 +159,7 @@ const iconos: NombreIcono[] = ['estrella', 'margarita', 'coctel', 'cerveza', 'bo
               <ul class="panel__lista">
                 {productos.map((p) => (
                   <li>
-                    <Fila producto={p} categoria={c} />
+                    <Platillo producto={p} categoria={c} />
                   </li>
                 ))}
               </ul>
@@ -201,7 +205,7 @@ const iconos: NombreIcono[] = ['estrella', 'margarita', 'coctel', 'cerveza', 'bo
           <Icono nombre="cerrar" />
           <span class="visually-hidden">Close</span>
         </button>
-        <div class="ficha__medallon" data-ficha-medallon></div>
+        <div class="ficha__foto" data-ficha-foto></div>
         <div class="ficha__info" data-ficha-info></div>
         <div class="ficha__pasos">
           <button type="button" class="ficha__paso" data-ficha-paso="-1">
@@ -219,7 +223,7 @@ const iconos: NombreIcono[] = ['estrella', 'margarita', 'coctel', 'cerveza', 'bo
     {
       iconos.map((i) => (
         <template data-emblema={i}>
-          <Medallon lado={260} icono={i} />
+          <Foto ancho={400} icono={i} />
         </template>
       ))
     }
@@ -232,6 +236,10 @@ const iconos: NombreIcono[] = ['estrella', 'margarita', 'coctel', 'cerveza', 'bo
 </script>
 
 <style>
+  :global(.menu__papel) {
+    margin-bottom: -4px;
+  }
+
   .menu__barra {
     position: sticky;
     top: var(--header-h);
@@ -505,7 +513,7 @@ const iconos: NombreIcono[] = ['estrella', 'margarita', 'coctel', 'cerveza', 'bo
     scroll-margin-top: calc(var(--header-h) + 150px);
   }
 
-  /* Teléfono: medallón pequeño con el índice al lado; el título ocupa todo el ancho debajo. */
+  /* Teléfono: foto pequeña con el índice al lado; el título ocupa todo el ancho debajo. */
   .panel__escena {
     position: relative;
     display: grid;
@@ -517,7 +525,7 @@ const iconos: NombreIcono[] = ['estrella', 'margarita', 'coctel', 'cerveza', 'bo
     container-type: inline-size;
   }
 
-  .panel__medallon {
+  .panel__foto {
     grid-row: 1;
     grid-column: 1;
   }
@@ -536,7 +544,7 @@ const iconos: NombreIcono[] = ['estrella', 'margarita', 'coctel', 'cerveza', 'bo
     outline: none;
   }
 
-  /* Sol de arena detrás del medallón (el mismo motivo del inicio). */
+  /* Sol de arena detrás de la foto (el mismo motivo del inicio). */
   .panel__escena::before {
     content: '';
     position: absolute;
@@ -593,12 +601,28 @@ const iconos: NombreIcono[] = ['estrella', 'margarita', 'coctel', 'cerveza', 'bo
     color: var(--texto);
   }
 
-  .panel__medallon :global(.medallon) {
-    width: 100%;
+  .panel__foto :global(.foto) {
+    box-shadow:
+      0 0 0 3px var(--fondo-alto),
+      0 0 0 4.5px var(--mx-verde),
+      0 16px 30px -18px rgb(1 49 33 / 0.6);
   }
 
+  /* Pequeña en el teléfono: la placa del azulejo se reduce. */
+  .panel__foto :global(.foto__insignia) {
+    padding: 6px 8px;
+  }
+
+  .panel__foto :global(.foto__insignia > span) {
+    display: none;
+  }
+
+  /* Rejilla de tarjetas: una columna en el teléfono, dos o tres en pantallas anchas. */
   .panel__lista {
     display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 236px), 1fr));
+    gap: 16px;
+    padding-top: 6px;
   }
 
   .panel__vecinos {
@@ -717,10 +741,18 @@ const iconos: NombreIcono[] = ['estrella', 'margarita', 'coctel', 'cerveza', 'bo
       width: 90%;
     }
 
-    .panel__medallon {
+    .panel__foto {
       grid-row: 1;
-      width: min(100%, 240px);
-      margin-bottom: 10px;
+      width: min(100%, 300px);
+      margin-bottom: 14px;
+    }
+
+    .panel__foto :global(.foto__insignia) {
+      padding: 12px 16px 10px;
+    }
+
+    .panel__foto :global(.foto__insignia > span) {
+      display: block;
     }
 
     .panel__meta {
@@ -819,22 +851,42 @@ const iconos: NombreIcono[] = ['estrella', 'margarita', 'coctel', 'cerveza', 'bo
     height: 20px;
   }
 
-  .ficha__medallon {
+  .ficha__foto {
     display: grid;
-    place-items: center;
+    justify-items: center;
     gap: 6px;
+    margin-top: 6px;
   }
 
-  .ficha .ficha__medallon :global(.medallon) {
-    width: min(var(--lado), 72vw);
+  .ficha .ficha__foto :global(.foto) {
+    width: min(100%, 400px);
+    box-shadow:
+      0 0 0 4px var(--fondo-alto),
+      0 0 0 5.5px var(--mx-verde);
   }
 
-  .ficha__medallon :global(.ficha__pie-foto) {
+  .ficha__foto :global(.ficha__pie-foto) {
     font-size: 0.78rem;
     color: var(--texto-suave);
   }
 
-  .ficha__info :global(.fila__nombre) {
+  .ficha__info :global(.platillo__info) {
+    justify-items: start;
+    text-align: left;
+    padding: 0;
+  }
+
+  .ficha__info :global(.platillo__etiquetas),
+  .ficha__info :global(.platillo__opciones),
+  .ficha__info :global(.platillo__lista) {
+    justify-content: flex-start;
+  }
+
+  .ficha__info :global(.platillo__desc) {
+    max-width: none;
+  }
+
+  .ficha__info :global(.platillo__nombre) {
     font-family: var(--f-display);
     font-weight: 400;
     font-size: clamp(1.8rem, 7.5vw, 2.6rem);
@@ -843,21 +895,12 @@ const iconos: NombreIcono[] = ['estrella', 'margarita', 'coctel', 'cerveza', 'bo
     color: var(--texto);
   }
 
-  .ficha__info :global(.fila__guia) {
-    display: none;
+  .ficha__info :global(.platillo__precio) {
+    font-size: 1.9rem;
+    color: var(--c-rojo-texto);
   }
 
-  .ficha__info :global(.fila__linea) {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .ficha__info :global(.fila__precio) {
-    font-size: 1.7rem;
-  }
-
-  .ficha__info :global(.fila__desc) {
+  .ficha__info :global(.platillo__desc) {
     font-size: 1.08rem;
     color: var(--texto);
   }
@@ -867,7 +910,7 @@ const iconos: NombreIcono[] = ['estrella', 'margarita', 'coctel', 'cerveza', 'bo
     gap: 10px;
   }
 
-  .ficha__info :global(.fila__info) {
+  .ficha__info :global(.platillo__info) {
     gap: 12px;
   }
 
@@ -946,8 +989,8 @@ const iconos: NombreIcono[] = ['estrella', 'margarita', 'coctel', 'cerveza', 'bo
       grid-column: 1 / -1;
     }
 
-    .ficha .ficha__medallon :global(.medallon) {
-      width: min(var(--lado), 320px);
+    .ficha .ficha__foto :global(.foto) {
+      width: 340px;
     }
   }
 </style>

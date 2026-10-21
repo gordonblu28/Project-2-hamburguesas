@@ -1,72 +1,59 @@
 ---
-// Firma tipográfica del sitio: la silueta del jinete sobre su línea de suelo, "The Rodeo" en letra
-// de madera y "Bar & Grill" como letrero. El logo oficial a color se muestra en el pie.
-import Silueta from './Silueta.astro';
+// Marca del sitio: el logo oficial de The Rodeo, a todo color (verde, amarillo, rojo y blanco,
+// con los dos jinetes), en su versión horizontal sin el margen verde. Se ve igual sobre la
+// cabecera clara, sobre el pie verde y sobre la noche de Halloween porque trae su propio fondo.
+import { Image } from 'astro:assets';
+import logo from '../assets/marca/logo-horizontal.jpg';
+import { NEGOCIO } from '../lib/datos';
 
 interface Props {
   class?: string;
+  /** Alto en px CSS en pantallas grandes (en el teléfono se reduce). */
+  alto?: number;
+  /** El enlace que la envuelve ya lleva el nombre: el texto alternativo sobraría. */
+  decorativa?: boolean;
+  prioridad?: boolean;
 }
-const { class: clase } = Astro.props;
+const { class: clase, alto = 56, decorativa = false, prioridad = true } = Astro.props;
+const ancho = Math.round((alto * logo.width) / logo.height);
 ---
 
-<span class:list={['marca', clase]}>
-  <span class="marca__insignia">
-    <Silueta class="marca__jinete" />
-  </span>
-  <span class="marca__texto">
-    <span class="marca__nombre">The Rodeo</span>
-    <span class="marca__sub">Bar &amp; Grill</span>
-  </span>
+<span class:list={['marca', clase]} style={`--alto:${alto}px`}>
+  <Image
+    src={logo}
+    alt={decorativa ? '' : `${NEGOCIO.nombre} logo`}
+    widths={[ancho, ancho * 2, ancho * 3].map((n) => Math.min(n, logo.width))}
+    sizes={`${ancho}px`}
+    quality={84}
+    loading={prioridad ? 'eager' : 'lazy'}
+    decoding="async"
+    class="marca__img"
+  />
 </span>
 
 <style>
   .marca {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    color: var(--texto);
-  }
-
-  /* El dibujo del logo termina en un corte recto: la línea de suelo lo asienta. */
-  .marca__insignia {
-    display: block;
-    width: 42px;
-    padding-bottom: 3px;
-    border-bottom: 1.5px solid currentColor;
-    transform-origin: 50% 100%;
+    display: inline-block;
+    line-height: 0;
+    border-radius: 8px;
+    /* Filete claro: separa el verde del logo del fondo sin alterar sus colores. */
+    box-shadow:
+      0 0 0 1.5px rgb(255 255 255 / 0.7),
+      0 6px 16px -8px rgb(1 49 33 / 0.6);
     transition: transform var(--t-base) var(--ease-buck);
   }
 
-  .marca__texto {
-    display: grid;
-    line-height: 1;
-  }
-
-  .marca__nombre {
-    font-family: var(--f-display);
-    font-size: 1.12rem;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
-
-  .marca__sub {
-    margin-top: 4px;
-    font-family: var(--f-label);
-    font-weight: 700;
-    font-size: 0.64rem;
-    letter-spacing: 0.42em;
-    text-transform: uppercase;
-    color: var(--texto-suave);
+  .marca__img {
+    display: block;
+    height: calc(var(--alto) * 0.82);
+    width: auto;
+    max-width: none;
+    border-radius: 8px;
   }
 
   @media (min-width: 900px) {
-    .marca__insignia {
-      width: 48px;
-    }
-
-    .marca__nombre {
-      font-size: 1.3rem;
+    .marca__img {
+      height: var(--alto);
     }
   }
 </style>

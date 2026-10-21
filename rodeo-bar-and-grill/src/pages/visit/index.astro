@@ -1,7 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import Icono from '../../components/Icono.astro';
-import Silueta from '../../components/Silueta.astro';
+import Jinete from '../../components/Jinete.astro';
 import { NEGOCIO, DIRECCION_LINEA, MAPAS, TEL_HREF } from '../../lib/datos';
 
 const d = NEGOCIO.direccion;
@@ -99,7 +99,7 @@ const datos = {
 
       <a class="boleto__talon" href={TEL_HREF} aria-label={`Call ${NEGOCIO.nombre} at ${NEGOCIO.telefono.visible}`}>
         <span class="boleto__numero" aria-hidden="true">No. {d.calle.split(' ')[0]}</span>
-        <Silueta class="boleto__jinete" />
+        <Jinete class="boleto__jinete" ancho={132} />
         <span class="boleto__llamar">
           <Icono nombre="telefono" /> Call us
         </span>
@@ -283,7 +283,8 @@ const datos = {
     gap: 12px;
     padding: 14px 20px;
     border-top: 2px dotted var(--c-blanco);
-    background: var(--c-negro);
+    /* Talón en el verde del logo, con la franja tricolor abajo. */
+    background: var(--c-verde-hondo) linear-gradient(90deg, var(--c-verde) 0 33.4%, #fff 33.4% 66.6%, var(--c-rojo) 66.6%) bottom / 100% 5px no-repeat;
     color: var(--c-beige);
     text-decoration: none;
     transition: transform var(--t-base) var(--ease-buck);

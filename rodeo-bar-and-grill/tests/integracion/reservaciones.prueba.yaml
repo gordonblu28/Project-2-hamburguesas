@@ -1,0 +1,25 @@
+# Configuración SOLO para las pruebas de integración (precio y horario inventados a propósito).
+# El sitio publicado usa src/data/reservaciones.yaml.
+activas: true
+moneda: usd
+tarifa:
+  tipo: por_persona
+  monto: 10.00
+deposito_porcentaje: 50
+horario:
+  lunes: [{ desde: "11:00", hasta: "21:00" }]
+  martes: [{ desde: "11:00", hasta: "21:00" }]
+  miercoles: [{ desde: "11:00", hasta: "21:00" }]
+  jueves: [{ desde: "11:00", hasta: "21:00" }]
+  viernes: [{ desde: "11:00", hasta: "21:00" }]
+  sabado: [{ desde: "11:00", hasta: "21:00" }]
+  domingo: [{ desde: "11:00", hasta: "21:00" }]
+intervalo_minutos: 30
+duracion_minutos: 90
+cupo_personas: 10
+personas_min: 1
+personas_max: 12
+anticipacion_minima_minutos: 120
+dias_adelante: 60
+cerrado: []
+minutos_para_pagar: 30

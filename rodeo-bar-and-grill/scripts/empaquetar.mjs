@@ -11,7 +11,8 @@ const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const codigo = process.argv.includes('--codigo');
 const origen = codigo ? raiz : path.join(raiz, 'dist');
 const destino = path.join(raiz, 'entrega', codigo ? 'rodeo-bar-and-grill-codigo.zip' : 'rodeo-bar-and-grill-cloudflare.zip');
-const EXCLUIR = new Set(['node_modules', 'dist', 'entrega', '.astro', '.wrangler', '.playwright-mcp', '.claude', 'revision']);
+// .dev.vars guarda claves de prueba locales: nunca se entrega.
+const EXCLUIR = new Set(['node_modules', 'dist', 'entrega', '.astro', '.wrangler', '.playwright-mcp', '.claude', 'revision', '.git', '.dev.vars']);
 
 async function listar(dir) {
   const salida = [];

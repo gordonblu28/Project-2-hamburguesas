@@ -4,3 +4,4 @@ entrega/
 .astro/
 .wrangler/
 .playwright-mcp/
+.dev.vars

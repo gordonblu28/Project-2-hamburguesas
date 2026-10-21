@@ -1,0 +1,6 @@
+# Copie este archivo como .dev.vars para probar las reservaciones en su computadora
+# (npx wrangler@4 dev). .dev.vars NO se sube al repositorio. En producción, use
+# `npx wrangler@4 secret put NOMBRE` en lugar de este archivo.
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+ADMIN_TOKEN=una-clave-larga-y-aleatoria-de-al-menos-16-caracteres

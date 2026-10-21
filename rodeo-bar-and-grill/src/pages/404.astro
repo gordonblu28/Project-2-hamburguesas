@@ -1,13 +1,13 @@
 ---
 import Base from '../layouts/Base.astro';
 import Icono from '../components/Icono.astro';
-import Silueta from '../components/Silueta.astro';
+import Jinete from '../components/Jinete.astro';
 import { NEGOCIO } from '../lib/datos';
 ---
 
 <Base titulo={`Page not found · ${NEGOCIO.nombre}`} descripcion="This page does not exist." indexar={false}>
   <section class="perdido wrap">
-    <Silueta class="perdido__jinete" />
+    <Jinete class="perdido__jinete" ancho={190} prioridad />
     <h1>
       <span class="serif">Off the</span>
       <span class="display">trail</span>

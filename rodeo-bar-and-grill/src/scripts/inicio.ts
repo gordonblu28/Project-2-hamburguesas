@@ -1,10 +1,10 @@
-// Inicio: el jinete entra corcoveando, lanza el lazo y atrapa el plato destacado.
+// Inicio: el jinete (a color) entra corcoveando, lanza el lazo y atrapa la tarjeta del plato destacado.
 // Después, cada pocos segundos da un "jalón" y el lazo cambia de plato (pausable).
 import { gsap } from 'gsap';
 import { movimientoActivo, alCambiarMovimiento } from './movimiento';
 
-const CUERDA_SUELTA = 'M286 130 C300 64 222 40 176 94';
-const CUERDA_TENSA = 'M286 130 C274 106 216 86 176 94';
+const CUERDA_SUELTA = 'M286 130 C300 64 232 32 196 70';
+const CUERDA_TENSA = 'M286 130 C276 100 230 70 196 70';
 const INTERVALO = 5;
 
 export function iniciarInicio() {
@@ -12,9 +12,8 @@ export function iniciarInicio() {
   if (!escena) return;
 
   const jinete = escena.querySelector<HTMLElement>('[data-jinete]')!;
-  const medallon = escena.querySelector<HTMLElement>('.medallon')!;
-  const plato = medallon.querySelector<HTMLElement>('.medallon__plato')!;
-  const fotos = Array.from(plato.querySelectorAll<HTMLImageElement>('img'));
+  const tarjeta = escena.querySelector<HTMLElement>('[data-tarjeta]')!;
+  const fotos = Array.from(tarjeta.querySelectorAll<HTMLImageElement>('.foto img'));
   const pies = Array.from(escena.querySelectorAll<HTMLElement>('[data-pie]'));
   const cuerdas = Array.from(escena.querySelectorAll<SVGPathElement>('[data-cuerda]'));
   const boton = escena.querySelector<HTMLButtonElement>('[data-siguiente]');
@@ -30,7 +29,7 @@ export function iniciarInicio() {
   fotos.forEach((f, i) => (f.style.visibility = i === 0 ? 'visible' : 'hidden'));
 
   // ── Entrada ── (en CSS, ver index.astro: el jinete entra corcoveando, lanza el lazo y atrapa
-  // el plato). Al terminar arrancan el balanceo y el ciclo de platos.
+  // la tarjeta). Al terminar arrancan el balanceo y el ciclo de platos.
   if (movimientoActivo()) {
     const retraso = document.documentElement.classList.contains('con-puerta') ? 0.55 : 0;
     gsap.delayedCall(retraso + 2.1, () => {
@@ -75,14 +74,15 @@ export function iniciarInicio() {
       })
       .to(jinete, { rotate: -8, x: -8, duration: 0.16, ease: 'power2.out' })
       .to(cuerdas, { attr: { d: CUERDA_TENSA }, duration: 0.16, ease: 'power2.out' }, '<')
-      .to(medallon, { scale: 0.92, duration: 0.16, ease: 'power2.out' }, '<')
-      .set(entraFoto, { visibility: 'visible', zIndex: 2, clipPath: 'circle(0% at 50% 50%)', rotate: -55, scale: 1.18 })
-      .to(sale, { rotate: 45, scale: 0.82, duration: 0.42, ease: 'power3.in' }, '<0.05')
-      .to(entraFoto, { clipPath: 'circle(75% at 50% 50%)', rotate: 0, scale: 1, duration: 0.65, ease: 'expo.out' }, '-=0.22')
+      // El jalón tira de la tarjeta hacia el jinete; la foto nueva se descubre de arriba abajo.
+      .to(tarjeta, { rotate: 3, x: 6, duration: 0.16, ease: 'power2.out' }, '<')
+      .set(entraFoto, { visibility: 'visible', zIndex: 2, clipPath: 'inset(0% 0% 100% 0%)', scale: 1.12 })
+      .to(sale, { scale: 0.9, opacity: 0.4, duration: 0.42, ease: 'power3.in' }, '<0.05')
+      .to(entraFoto, { clipPath: 'inset(0% 0% 0% 0%)', scale: 1, duration: 0.65, ease: 'expo.out' }, '-=0.22')
       .to(jinete, { rotate: 0, x: 0, duration: 0.7, ease: 'elastic.out(1, 0.4)' }, '<')
       .to(cuerdas, { attr: { d: CUERDA_SUELTA }, duration: 0.7, ease: 'elastic.out(1, 0.32)' }, '<')
-      .to(medallon, { scale: 1, duration: 0.7, ease: 'elastic.out(1, 0.4)' }, '<')
-      .set(sale, { visibility: 'hidden', clearProps: 'transform,zIndex,clipPath' })
+      .to(tarjeta, { rotate: -3, x: 0, duration: 0.9, ease: 'elastic.out(1, 0.35)' }, '<')
+      .set(sale, { visibility: 'hidden', clearProps: 'transform,zIndex,clipPath,opacity' })
       .set(entraFoto, { clearProps: 'zIndex,clipPath' });
 
     if (pieSale && pieEntra) {
@@ -121,7 +121,7 @@ export function iniciarInicio() {
   function respirar() {
     respiracion?.kill();
     if (!movimientoActivo()) return;
-    respiracion = gsap.to(jinete.querySelector('.silueta'), {
+    respiracion = gsap.to(jinete.querySelector('.jinete'), {
       rotate: 2.2,
       y: -3,
       duration: 1.3,
@@ -151,14 +151,14 @@ export function iniciarInicio() {
     } else {
       ciclo?.kill();
       respiracion?.kill();
-      gsap.set(jinete.querySelector('.silueta'), { clearProps: 'transform' });
+      gsap.set(jinete.querySelector('.jinete'), { clearProps: 'transform' });
     }
   });
 
   // Profundidad con el cursor (solo con mouse): capas que se mueven a distinto ritmo.
   if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
     const capas = [
-      { el: medallon, f: 14 },
+      { el: tarjeta, f: 14 },
       { el: jinete, f: -9 },
       { el: escena.querySelector<HTMLElement>('[data-sol]'), f: -4 },
       { el: document.querySelector<HTMLElement>('.hero__titulo'), f: 5 },

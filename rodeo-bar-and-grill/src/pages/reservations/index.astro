@@ -1,0 +1,706 @@
+---
+// Reservaciones en línea: la persona elige personas, fecha y hora (con disponibilidad real del
+// servidor), deja sus datos y paga el depósito en Stripe. La reserva solo se confirma cuando el
+// servidor verifica el pago (ver worker/app.ts). Las reglas y precios salen de
+// src/data/reservaciones.yaml; mientras falte configurarlos, la página lo dice y pide llamar.
+import Base from '../../layouts/Base.astro';
+import Icono from '../../components/Icono.astro';
+import PapelPicado from '../../components/PapelPicado.astro';
+import { NEGOCIO, TEL_HREF, RESERVAS, RESERVAS_ESTADO } from '../../lib/datos';
+import { dinero } from '../../lib/reservas';
+
+const c = RESERVAS;
+const pct = c.deposito_porcentaje;
+const tarifaTexto =
+  c.tarifa.monto === null
+    ? null
+    : c.tarifa.tipo === 'por_persona'
+      ? `${dinero(Math.round(c.tarifa.monto * 100), c.moneda)} per guest`
+      : `${dinero(Math.round(c.tarifa.monto * 100), c.moneda)} per reservation`;
+// Para el script del navegador; "<" escapado para que el JSON no pueda cerrar la etiqueta.
+const datosCliente = JSON.stringify({ config: c, estado: RESERVAS_ESTADO }).replace(/</g, '\\u003c');
+const personas = Array.from({ length: c.personas_max - c.personas_min + 1 }, (_, i) => c.personas_min + i);
+const pasos = [
+  { icono: 'calendario', titulo: 'Pick your table', texto: 'Party size, date and an available time.' },
+  { icono: 'candado', titulo: `Pay a ${pct}% deposit`, texto: 'Securely with Stripe. We never see your card.' },
+  { icono: 'check', titulo: 'You’re confirmed', texto: `The remaining ${100 - pct}% is paid at the restaurant.` },
+] as const;
+---
+
+<Base
+  titulo={`Reservations · ${NEGOCIO.nombre}`}
+  descripcion={`Reserve a table at ${NEGOCIO.nombre} in Leon Valley, TX. Choose your date and time online and confirm with a ${pct}% deposit.`}
+  actual="reservas"
+  clase="pagina-reservas"
+>
+  <PapelPicado class="reservas__papel" cantidad={30} />
+
+  <section class="wrap reservas" aria-labelledby="reservas-titulo">
+    <header class="reservas__cabeza">
+      <p class="kicker kicker--filete">Reservations</p>
+      <h1 id="reservas-titulo" class="reservas__titulo">
+        <span class="display">Reserve</span>
+        <span class="serif">your table</span>
+      </h1>
+      <ol class="reservas__pasos">
+        {
+          pasos.map((p, i) => (
+            <li>
+              <span class="reservas__paso-icono">
+                <Icono nombre={p.icono} />
+              </span>
+              <span>
+                <strong>
+                  {i + 1}. {p.titulo}
+                </strong>
+                {p.texto}
+              </span>
+            </li>
+          ))
+        }
+      </ol>
+    </header>
+
+    <!-- Aviso: sin configurar (al compilar), sin servidor o sin pagos (lo decide el script). -->
+    <div class="aviso" data-aviso role="status" hidden={RESERVAS_ESTADO.listas ? true : undefined}>
+      <Icono nombre="reloj" />
+      <div>
+        <p class="aviso__titulo" data-aviso-titulo>Online reservations are almost ready</p>
+        <p data-aviso-texto>
+          We’re finishing setting up online booking. In the meantime, please call us to reserve — we’d love to save you a table.
+        </p>
+      </div>
+      <a class="btn aviso__btn" href={TEL_HREF}><Icono nombre="telefono" /> {NEGOCIO.telefono.visible}</a>
+    </div>
+
+    <div class="aviso aviso--info" data-cancelada role="status" hidden>
+      <Icono nombre="cerrar" />
+      <div>
+        <p class="aviso__titulo">Payment cancelled — your table was not reserved</p>
+        <p>You were not charged. Your details are still below if you’d like to try again.</p>
+      </div>
+    </div>
+
+    <noscript>
+      <div class="aviso">
+        <div>
+          <p class="aviso__titulo">Online booking needs JavaScript</p>
+          <p>Please call <a href={TEL_HREF}>{NEGOCIO.telefono.visible}</a> to reserve your table.</p>
+        </div>
+      </div>
+    </noscript>
+
+    <form class="reserva" id="reservar" data-reserva novalidate>
+      <script is:inline type="application/json" data-config set:html={datosCliente} />
+      <div class="reserva__campos">
+        <fieldset class="bloque">
+          <legend class="bloque__titulo"><span class="bloque__num">1</span> Party &amp; date</legend>
+          <div class="fila-doble">
+            <div class="campo">
+              <label for="r-personas">Guests</label>
+              <select id="r-personas" name="personas" data-campo="personas" required>
+                {
+                  personas.map((n) => (
+                    <option value={n} selected={n === Math.min(2, c.personas_max) ? true : undefined}>
+                      {n} {n === 1 ? 'guest' : 'guests'}
+                    </option>
+                  ))
+                }
+              </select>
+              <p class="campo__ayuda">
+                More than {c.personas_max}? <a href={TEL_HREF}>Call us</a>.
+              </p>
+              <p class="campo__error" data-error="personas" hidden></p>
+            </div>
+            <div class="campo">
+              <label for="r-fecha">Date</label>
+              <input id="r-fecha" type="date" name="fecha" data-campo="fecha" required />
+              <p class="campo__ayuda">Up to {c.dias_adelante} days ahead.</p>
+              <p class="campo__error" data-error="fecha" hidden></p>
+            </div>
+          </div>
+
+          <fieldset class="horarios" aria-describedby="horarios-estado">
+            <legend class="horarios__titulo">Available times <small>(Texas time)</small></legend>
+            <p class="horarios__estado" id="horarios-estado" data-horarios-estado aria-live="polite">Choose a date to see available times.</p>
+            <div class="horarios__lista" data-horarios></div>
+            <p class="campo__error" data-error="hora" hidden></p>
+          </fieldset>
+        </fieldset>
+
+        <fieldset class="bloque">
+          <legend class="bloque__titulo"><span class="bloque__num">2</span> Your details</legend>
+          <div class="campo">
+            <label for="r-nombre">Full name</label>
+            <input id="r-nombre" name="nombre" data-campo="nombre" autocomplete="name" maxlength="80" required />
+            <p class="campo__error" data-error="nombre" hidden></p>
+          </div>
+          <div class="fila-doble">
+            <div class="campo">
+              <label for="r-telefono">Phone</label>
+              <input id="r-telefono" type="tel" name="telefono" data-campo="telefono" autocomplete="tel" inputmode="tel" maxlength="24" required />
+              <p class="campo__error" data-error="telefono" hidden></p>
+            </div>
+            <div class="campo">
+              <label for="r-email">Email</label>
+              <input id="r-email" type="email" name="email" data-campo="email" autocomplete="email" maxlength="120" required />
+              <p class="campo__ayuda">Your receipt is sent here.</p>
+              <p class="campo__error" data-error="email" hidden></p>
+            </div>
+          </div>
+          <div class="campo">
+            <label for="r-peticiones">Special requests <small>(optional)</small></label>
+            <textarea id="r-peticiones" name="peticiones" data-campo="peticiones" rows="3" maxlength="500" placeholder="Birthday, high chair, accessibility needs…"></textarea>
+            <p class="campo__ayuda"><span data-contador>0</span>/500</p>
+            <p class="campo__error" data-error="peticiones" hidden></p>
+          </div>
+          <!-- Campo trampa para robots: invisible y fuera del orden de tabulación. -->
+          <div class="trampa" aria-hidden="true">
+            <label for="r-sitio">Leave this empty</label>
+            <input id="r-sitio" name="sitio_web" tabindex="-1" autocomplete="off" />
+          </div>
+        </fieldset>
+      </div>
+
+      <aside class="resumen" aria-labelledby="resumen-titulo">
+        <div class="resumen__tarjeta">
+          <div class="tricolor resumen__franja" aria-hidden="true"></div>
+          <h2 id="resumen-titulo" class="resumen__titulo">Your reservation</h2>
+          <dl class="resumen__lista">
+            <div><dt>Date</dt><dd data-resumen="fecha">—</dd></div>
+            <div><dt>Time</dt><dd data-resumen="hora">—</dd></div>
+            <div><dt>Guests</dt><dd data-resumen="personas">—</dd></div>
+          </dl>
+          <dl class="resumen__lista resumen__dinero">
+            <div>
+              <dt>
+                Booking total
+                <small data-resumen="tarifa">{tarifaTexto ?? 'Not set yet'}</small>
+              </dt>
+              <dd data-resumen="total">—</dd>
+            </div>
+            <div class="resumen__deposito">
+              <dt>Deposit due now <small>{pct}% · paid online</small></dt>
+              <dd data-resumen="deposito">—</dd>
+            </div>
+            <div>
+              <dt>Remaining balance <small>paid at the restaurant</small></dt>
+              <dd data-resumen="resto">—</dd>
+            </div>
+          </dl>
+          <p class="resumen__nota">
+            <Icono nombre="candado" /> Your table is confirmed only after your deposit payment is verified. Payments are processed by Stripe — we never see or store your card details.
+          </p>
+          <p class="resumen__error" data-error-general role="alert" hidden></p>
+          <button class="btn resumen__pagar" type="submit" data-pagar disabled>
+            <Icono nombre="candado" />
+            <span data-pagar-texto>Pay deposit &amp; reserve</span>
+          </button>
+          <p class="resumen__tel">Questions? <a href={TEL_HREF}>{NEGOCIO.telefono.visible}</a></p>
+        </div>
+      </aside>
+    </form>
+  </section>
+</Base>
+
+<script>
+  import { iniciarReservas } from '../../scripts/reservas';
+  iniciarReservas();
+</script>
+
+<style>
+  :global(.reservas__papel) {
+    margin-bottom: -6px;
+  }
+
+  .reservas {
+    display: grid;
+    gap: 22px;
+    padding-block: 18px clamp(48px, 8vw, 96px);
+  }
+
+  .reservas__cabeza {
+    display: grid;
+    gap: 12px;
+  }
+
+  .reservas__titulo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 0.3em;
+    line-height: 0.95;
+  }
+
+  .reservas__titulo .display {
+    font-size: clamp(2.6rem, 9vw, 5.2rem);
+  }
+
+  .reservas__titulo .serif {
+    font-size: clamp(2.4rem, 8vw, 4.8rem);
+    color: var(--c-rojo-texto);
+  }
+
+  .reservas__pasos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+    gap: 10px;
+    margin-top: 6px;
+  }
+
+  .reservas__pasos li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: var(--fondo-medio);
+    box-shadow: inset 0 0 0 1px var(--linea);
+    font-size: 0.95rem;
+    line-height: 1.35;
+    color: var(--texto-suave);
+  }
+
+  .reservas__pasos strong {
+    display: block;
+    font-family: var(--f-label);
+    font-size: 1.02rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--texto);
+  }
+
+  .reservas__paso-icono {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: var(--c-verde);
+    color: #fff;
+  }
+
+  .reservas__pasos li:nth-child(2) .reservas__paso-icono {
+    background: var(--c-rojo);
+  }
+
+  .reservas__paso-icono :global(svg) {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* ── Avisos ── */
+  .aviso {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 12px 16px;
+    padding: 16px 18px;
+    border-radius: 14px;
+    background: #fff6e0;
+    box-shadow: inset 0 0 0 1.5px #d9a520;
+  }
+
+  .aviso > :global(svg) {
+    width: 28px;
+    height: 28px;
+    color: #8a5a00;
+  }
+
+  .aviso__titulo {
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 1.15rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .aviso p:not(.aviso__titulo) {
+    color: var(--texto-suave);
+  }
+
+  .aviso__btn {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .aviso--info {
+    background: var(--fondo-alto);
+    box-shadow: inset 0 0 0 1.5px var(--c-rojo);
+  }
+
+  .aviso--info > :global(svg) {
+    color: var(--c-rojo);
+  }
+
+  @media (min-width: 760px) {
+    .aviso {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+    }
+
+    .aviso__btn {
+      grid-column: auto;
+    }
+  }
+
+  /* ── Formulario ── */
+  .reserva {
+    display: grid;
+    gap: 22px;
+    align-items: start;
+  }
+
+  .reserva__campos {
+    display: grid;
+    gap: 18px;
+  }
+
+  .bloque {
+    display: grid;
+    gap: 14px;
+    margin: 0;
+    padding: 18px 16px 20px;
+    border: 1.5px solid var(--tarjeta-borde);
+    border-radius: var(--radio-tarjeta);
+    background: var(--tarjeta);
+    min-width: 0;
+  }
+
+  .bloque__titulo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 6px;
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 1.25rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .bloque__num {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: var(--c-verde);
+    color: #fff;
+    font-size: 1rem;
+    letter-spacing: 0;
+  }
+
+  .fila-doble {
+    display: grid;
+    gap: 14px;
+  }
+
+  @media (min-width: 620px) {
+    .fila-doble {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .campo {
+    display: grid;
+    gap: 6px;
+    align-content: start;
+  }
+
+  .campo label,
+  .horarios__titulo {
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .campo small,
+  .horarios__titulo small {
+    font-family: var(--f-body);
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--texto-suave);
+  }
+
+  .campo input,
+  .campo select,
+  .campo textarea {
+    width: 100%;
+    min-height: 50px;
+    padding: 10px 14px;
+    border: 1.5px solid rgb(20 18 15 / 0.28);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--c-negro);
+    font: 400 1.05rem/1.35 var(--f-body);
+    transition:
+      border-color var(--t-fast),
+      box-shadow var(--t-fast);
+  }
+
+  .campo textarea {
+    resize: vertical;
+  }
+
+  .campo input:focus-visible,
+  .campo select:focus-visible,
+  .campo textarea:focus-visible {
+    outline: none;
+    border-color: var(--c-verde);
+    box-shadow: 0 0 0 3px rgb(0 104 71 / 0.25);
+  }
+
+  .campo [aria-invalid='true'] {
+    border-color: var(--c-rojo);
+    box-shadow: 0 0 0 3px rgb(200 16 46 / 0.15);
+  }
+
+  .campo__ayuda {
+    font-size: 0.86rem;
+    color: var(--texto-suave);
+  }
+
+  .campo__error,
+  .resumen__error {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--c-rojo-texto);
+  }
+
+  .trampa {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  /* Horarios: píldoras seleccionables */
+  .horarios {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+
+  .horarios__estado {
+    color: var(--texto-suave);
+    font-size: 0.96rem;
+  }
+
+  .horarios__lista {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 8px;
+  }
+
+  .horarios__lista:empty {
+    display: none;
+  }
+
+  .horarios__lista :global(label) {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 48px;
+    padding: 4px 6px;
+    border-radius: 999px;
+    border: 1.5px solid var(--tarjeta-borde);
+    background: #fff;
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 1.02rem;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition:
+      background-color var(--t-fast),
+      border-color var(--t-fast),
+      color var(--t-fast),
+      transform var(--t-base) var(--ease-buck);
+  }
+
+  .horarios__lista :global(input) {
+    position: absolute;
+    opacity: 0;
+    inset: 0;
+    margin: 0;
+    cursor: pointer;
+  }
+
+  .horarios__lista :global(label:hover) {
+    border-color: var(--c-verde);
+  }
+
+  .horarios__lista :global(label:has(input:checked)) {
+    background: var(--c-verde);
+    border-color: var(--c-verde);
+    color: #fff;
+    transform: scale(1.04);
+  }
+
+  .horarios__lista :global(label:has(input:focus-visible)) {
+    box-shadow: 0 0 0 3px rgb(0 104 71 / 0.35);
+  }
+
+  .horarios__lista :global(label:has(input:disabled)) {
+    background: var(--fondo-medio);
+    color: rgb(20 18 15 / 0.45);
+    text-decoration: line-through;
+    cursor: not-allowed;
+  }
+
+  .horarios__lista :global(label small) {
+    font-family: var(--f-body);
+    font-weight: 400;
+    font-size: 0.7rem;
+    letter-spacing: 0;
+    text-decoration: none;
+  }
+
+  /* ── Resumen ── */
+  .resumen__tarjeta {
+    position: relative;
+    display: grid;
+    gap: 14px;
+    padding: 0 18px 20px;
+    overflow: hidden;
+    border-radius: var(--radio-tarjeta);
+    background: var(--tarjeta);
+    border: 1.5px solid var(--tarjeta-borde);
+    box-shadow: var(--tarjeta-sombra);
+  }
+
+  .resumen__franja {
+    margin: 0 -18px 4px;
+    height: 6px;
+  }
+
+  .resumen__titulo {
+    font-family: var(--f-display);
+    font-weight: 400;
+    font-size: 1.6rem;
+    text-transform: uppercase;
+  }
+
+  .resumen__lista {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+  }
+
+  .resumen__lista > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .resumen__lista dt {
+    display: grid;
+    font-family: var(--f-label);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--texto-suave);
+  }
+
+  .resumen__lista dt small {
+    font-family: var(--f-body);
+    font-weight: 400;
+    font-size: 0.8rem;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .resumen__lista dd {
+    margin: 0;
+    text-align: right;
+    font-weight: 600;
+  }
+
+  .resumen__dinero {
+    padding-top: 12px;
+    border-top: 1.5px dashed var(--linea);
+  }
+
+  .resumen__dinero dd {
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 1.3rem;
+  }
+
+  .resumen__deposito {
+    margin-inline: -8px;
+    padding: 10px 8px;
+    border-radius: 10px;
+    background: rgb(0 104 71 / 0.08);
+  }
+
+  .resumen__deposito dt {
+    color: var(--c-verde);
+  }
+
+  .resumen__deposito dd {
+    font-size: 1.7rem;
+    color: var(--c-verde);
+  }
+
+  .resumen__nota {
+    display: flex;
+    gap: 8px;
+    font-size: 0.86rem;
+    line-height: 1.45;
+    color: var(--texto-suave);
+  }
+
+  .resumen__nota :global(svg) {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    margin-top: 2px;
+  }
+
+  .resumen__pagar {
+    width: 100%;
+    --btn-bg: var(--c-rojo);
+    --btn-borde: var(--c-rojo);
+  }
+
+  .resumen__pagar[disabled] {
+    --btn-bg: #9b948a;
+    --btn-borde: #9b948a;
+    cursor: not-allowed;
+  }
+
+  .resumen__pagar[aria-busy='true'] {
+    cursor: progress;
+  }
+
+  .resumen__tel {
+    text-align: center;
+    font-size: 0.92rem;
+    color: var(--texto-suave);
+  }
+
+  @media (min-width: 980px) {
+    .reserva {
+      grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr);
+      gap: 28px;
+    }
+
+    .resumen {
+      position: sticky;
+      top: calc(var(--header-h) + 20px);
+    }
+
+    .bloque {
+      padding: 22px 24px 24px;
+    }
+  }
+</style>

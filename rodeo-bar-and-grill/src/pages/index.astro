@@ -1,11 +1,12 @@
 ---
 import Base from '../layouts/Base.astro';
 import Letras from '../components/Letras.astro';
-import Medallon from '../components/Medallon.astro';
-import Silueta from '../components/Silueta.astro';
-import Arco from '../components/Arco.astro';
+import Foto from '../components/Foto.astro';
+import Jinete from '../components/Jinete.astro';
+import Platillo from '../components/Platillo.astro';
+import PapelPicado from '../components/PapelPicado.astro';
 import Icono from '../components/Icono.astro';
-import { NEGOCIO, DIRECCION_LINEA, TEMPORADA, DESTACADOS, PORTADA } from '../lib/datos';
+import { NEGOCIO, DIRECCION_LINEA, TEMPORADA, DESTACADOS, PORTADA, TEL_HREF } from '../lib/datos';
 import { productos, categorias, foto, ladoMaximo, precioResumen, rutaProducto } from '../lib/menu';
 
 // Platos del lazo: destacados con foto de resolución suficiente para el tamaño del inicio.
@@ -16,7 +17,7 @@ const platos = DESTACADOS.map((id) => todos.find((p) => p.id === id))
   .filter((x): x is { p: (typeof todos)[number]; img: NonNullable<ReturnType<typeof foto>> } => !!x.img && ladoMaximo(x.img) >= 150);
 const [primero, ...resto] = platos;
 
-// Galería "House Plates" (src/data/portada.yaml).
+// "Our most loved dishes" (src/data/portada.yaml).
 const galeria = PORTADA.galeria.map((id) => {
   const p = todos.find((x) => x.id === id);
   if (!p) throw new Error(`src/data/portada.yaml: no existe el producto "${id}" en productos.yaml.`);
@@ -58,6 +59,7 @@ const datos = {
   datosEstructurados={datos}
   clase="pagina-inicio"
 >
+  <PapelPicado class="inicio__papel" cantidad={30} />
   <section class="hero wrap" aria-labelledby="hero-titulo">
     <div class="hero__texto">
       <p class="kicker kicker--filete hero__kicker" data-entra style="--i:0">Bar &amp; Grill · Mexican Restaurant</p>
@@ -72,7 +74,7 @@ const datos = {
       </p>
       <div class="hero__acciones" data-entra style="--i:3">
         <a class="btn" href="/menu/" data-astro-prefetch>Explore the menu <Icono nombre="flecha" /></a>
-        <a class="btn btn--ghost" href="/visit/" data-astro-prefetch><Icono nombre="pin" /> Find us</a>
+        <a class="btn btn--ghost" href="/reservations/" data-astro-prefetch><Icono nombre="calendario" /> Reserve</a>
       </div>
       {
         TEMPORADA.visible && (
@@ -97,21 +99,33 @@ const datos = {
         <div class="hero__escena" data-escena role="group" aria-roledescription="carousel" aria-label="House favorites">
           <div class="hero__sol" data-sol aria-hidden="true" />
 
-          <div class="hero__medallon" data-medallon>
-            <Medallon
+          <div class="hero__tarjeta" data-tarjeta>
+            <Foto
               img={primero.img}
               alt={primero.p.data.nombre}
-              lado={240}
+              ancho={260}
+              proporcion={0.78}
               prioridad
               alternas={resto.map((x) => ({ img: x.img, alt: x.p.data.nombre }))}
             />
+            <ul class="hero__pies" aria-live="polite">
+              {platos.map((x, i) => (
+                <li data-pie hidden={i > 0 ? true : undefined}>
+                  <a href={rutaProducto(x.p)}>
+                    <span class="hero__pie-nombre">{x.p.data.nombre}</span>
+                    {precioResumen(x.p) && <span class="hero__pie-precio">{precioResumen(x.p)}</span>}
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <span class="hero__nudo" aria-hidden="true" />
             <button class="hero__siguiente" type="button" data-siguiente aria-label="Show the next dish">
               <Icono nombre="flecha" />
             </button>
           </div>
 
           <div class="hero__jinete" data-jinete>
-            <Silueta class="hero__silueta" />
+            <Jinete class="hero__figura" ancho={340} prioridad />
           </div>
 
           <svg class="hero__capa" viewBox="0 0 400 360" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
@@ -120,7 +134,7 @@ const datos = {
                 <path
                   class="cuerda-trazo"
                   data-cuerda
-                  d="M286 130 C300 64 222 40 176 94"
+                  d="M286 130 C300 64 232 32 196 70"
                   fill="none"
                   stroke="#fff"
                   stroke-width="12"
@@ -129,8 +143,8 @@ const datos = {
               </mask>
             </defs>
             <g class="hero__cuerda" mask="url(#mascara-cuerda)">
-              <path class="cuerda cuerda--base" data-cuerda d="M286 130 C300 64 222 40 176 94" />
-              <path class="cuerda cuerda--hebra" data-cuerda d="M286 130 C300 64 222 40 176 94" />
+              <path class="cuerda cuerda--base" data-cuerda d="M286 130 C300 64 232 32 196 70" />
+              <path class="cuerda cuerda--hebra" data-cuerda d="M286 130 C300 64 232 32 196 70" />
             </g>
             <g class="baranda">
               <rect class="baranda__poste" x="14" y="292" width="14" height="68" />
@@ -149,17 +163,6 @@ const datos = {
             </g>
           </svg>
 
-          <ul class="hero__pies" aria-live="polite">
-            {platos.map((x, i) => (
-              <li data-pie hidden={i > 0 ? true : undefined}>
-                <a href={rutaProducto(x.p)}>
-                  <span class="hero__pie-nombre">{x.p.data.nombre}</span>
-                  {precioResumen(x.p) && <span class="hero__pie-precio">{precioResumen(x.p)}</span>}
-                  <small>Photo from the printed menu</small>
-                </a>
-              </li>
-            ))}
-          </ul>
         </div>
       )
     }
@@ -183,15 +186,17 @@ const datos = {
   </div>
 
   <section class="platos" aria-labelledby="platos-titulo">
-    <div class="wrap platos__rejilla">
+    <div class="wrap">
       <header class="platos__cabeza">
-        <p class="kicker kicker--filete" data-revela="tira">From the kitchen</p>
-        <h2 id="platos-titulo" class="platos__titulo" data-revela="sube">
-          <span class="display">House</span>
-          <span class="serif">plates</span>
-        </h2>
+        <div>
+          <p class="kicker kicker--filete" data-revela="tira">From the kitchen</p>
+          <h2 id="platos-titulo" class="platos__titulo" data-revela="sube">
+            <span class="serif">Our most</span>
+            <span class="display">Loved dishes</span>
+          </h2>
+        </div>
         <p class="platos__intro" data-revela="sube" style="--orden:1">
-          A few plates from The Rodeo’s menu, from the grill to the sea. Photos come from the printed menu.
+          From the grill to the sea — a few plates guests keep coming back for. Photos come from our printed menu.
         </p>
         <a class="enlace" href="/menu/" data-revela="sube" style="--orden:2" data-astro-prefetch>
           See the full menu <Icono nombre="flecha" />
@@ -200,20 +205,30 @@ const datos = {
 
       <ol class="platos__lista">
         {
-          galeria.map(({ p, img, cat }, i) => (
-            <li class="plato" data-paralaje={[0.05, -0.03, 0.08, -0.01][i % 4]}>
-              <a href={rutaProducto(p)} class="plato__enlace">
-                <Arco img={img} alt={p.data.nombre} ancho={240} proporcion={1.25} profundidad={0} />
-                <span class="plato__texto" data-revela="sube" style={`--orden:${i}`}>
-                  <span class="plato__cat serif">{cat.data.corto}</span>
-                  <span class="plato__nombre">{p.data.nombre}</span>
-                  {precioResumen(p) && <span class="plato__precio">{precioResumen(p)}</span>}
-                </span>
-              </a>
+          galeria.map(({ p, cat }, i) => (
+            <li class="plato" data-revela="sube" style={`--orden:${i}`}>
+              <Platillo producto={p} categoria={cat} href={rutaProducto(p)} accion="View" conCategoria />
             </li>
           ))
         }
       </ol>
+    </div>
+  </section>
+
+  <section class="reservar" aria-labelledby="reservar-titulo">
+    <div class="greca" aria-hidden="true"></div>
+    <div class="wrap reservar__fila">
+      <div class="reservar__texto">
+        <p class="kicker reservar__kicker">Birthdays · Families · Fiestas</p>
+        <h2 id="reservar-titulo" class="reservar__titulo">
+          <span class="display">Save your</span> <span class="serif">table</span>
+        </h2>
+        <p class="reservar__intro">Pick a date and time, see live availability, and lock in your table with a deposit — the rest is paid at the restaurant.</p>
+      </div>
+      <div class="reservar__acciones">
+        <a class="btn reservar__btn" href="/reservations/" data-astro-prefetch><Icono nombre="calendario" /> Reserve a table</a>
+        <a class="enlace reservar__tel" href={TEL_HREF}><Icono nombre="telefono" /> or call {NEGOCIO.telefono.visible}</a>
+      </div>
     </div>
   </section>
 </Base>
@@ -279,15 +294,17 @@ const datos = {
     transform-origin: 50% 90%;
   }
 
-  /* Placa de letrero: negra, con doble filete, apenas ladeada. */
+  /* Placa como la del logo: roja, en forma de píldora, con letras blancas y filete. */
   .hero__placa {
     margin-top: 0.4em;
-    padding: 0.32em 1em 0.26em;
-    background: var(--c-negro);
-    color: var(--c-beige);
+    padding: 0.32em 1.1em 0.26em;
+    border-radius: 999px;
+    background: var(--c-rojo);
+    color: #fff;
     box-shadow:
-      inset 0 0 0 3px var(--c-negro),
-      inset 0 0 0 4px var(--c-arena-oscura);
+      0 0 0 2px var(--c-negro),
+      0 0 0 5px var(--fondo),
+      0 0 0 6.5px var(--mx-verde);
     font-family: var(--f-label);
     font-weight: 700;
     font-size: clamp(0.92rem, 3.8vw, 1.35rem);
@@ -423,23 +440,41 @@ const datos = {
     mask: linear-gradient(#000 52%, transparent 52% 56%, #000 56% 63%, transparent 63% 68%, #000 68% 74%, transparent 74% 81%, #000 81% 86%, transparent 86%);
   }
 
-  /* El plato atrapado queda delante de la cola del caballo; la cuerda, encima de todo. */
-  .hero__medallon {
+  /* El plato atrapado: una tarjeta de foto que cuelga del lazo, delante de la cola del caballo;
+     la cuerda queda encima de todo. */
+  .hero__tarjeta {
     position: absolute;
-    left: 4%;
-    top: 18%;
-    width: 50%;
+    left: 2%;
+    top: 19%;
+    width: 52%;
     z-index: 3;
+    padding: 8px 8px 10px;
+    border-radius: var(--radio-tarjeta);
+    background: var(--tarjeta);
+    border: 1.5px solid var(--tarjeta-borde);
+    box-shadow: 0 26px 44px -26px rgb(1 49 33 / 0.7);
+    transform: rotate(-3deg);
+    transform-origin: 75% 0;
   }
 
-  .hero__medallon :global(.medallon) {
-    width: 100%;
+  /* Nudo del lazo sobre el borde superior de la tarjeta. */
+  .hero__nudo {
+    position: absolute;
+    right: 18%;
+    top: -9px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--cuerda);
+    box-shadow:
+      inset 0 0 0 4px var(--cuerda-oscura),
+      0 0 0 2px var(--c-negro);
   }
 
   .hero__siguiente {
     position: absolute;
-    right: 4%;
-    bottom: 4%;
+    right: -14px;
+    bottom: 26%;
     z-index: 2;
     display: grid;
     place-items: center;
@@ -447,9 +482,9 @@ const datos = {
     height: 44px;
     border-radius: 50%;
     border: 0;
-    background: var(--c-negro);
-    color: var(--c-beige);
-    box-shadow: 0 0 0 3px var(--fondo);
+    background: var(--c-rojo);
+    color: #fff;
+    box-shadow: 0 0 0 3px var(--tarjeta);
     cursor: pointer;
     transition: transform var(--t-fast) var(--ease-out);
   }
@@ -471,10 +506,9 @@ const datos = {
     z-index: 2;
     transform-origin: 62% 96%;
     pointer-events: none;
-    color: var(--c-negro);
   }
 
-  .hero__jinete :global(.hero__silueta) {
+  .hero__jinete :global(.hero__figura) {
     width: 100%;
     transform-origin: 62% 96%;
   }
@@ -540,18 +574,13 @@ const datos = {
     animation-delay: calc(var(--retraso) + 0.6s);
   }
 
-  :global(html[data-motion='on']) .hero__medallon :global(.lazo-trazo) {
-    animation: trazo 0.42s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-    animation-delay: calc(var(--retraso) + 0.95s);
+  :global(html[data-motion='on']) .hero__tarjeta {
+    animation: tarjeta-atrapada 0.95s cubic-bezier(0.34, 1.4, 0.5, 1) backwards;
+    animation-delay: calc(var(--retraso) + 0.9s);
   }
 
-  :global(html[data-motion='on']) .hero__medallon :global(.medallon__plato) {
-    animation: plato-atrapado 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-    animation-delay: calc(var(--retraso) + 1.15s);
-  }
-
-  :global(html[data-motion='on']) .hero__medallon :global(.medallon) {
-    animation: lazo-aprieta 0.85s ease-out backwards;
+  :global(html[data-motion='on']) .hero__tarjeta :global(.foto) {
+    animation: foto-revela 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
     animation-delay: calc(var(--retraso) + 1.15s);
   }
 
@@ -634,27 +663,30 @@ const datos = {
     }
   }
 
-  @keyframes plato-atrapado {
-    from {
-      clip-path: circle(0% at 50% 50%);
+  /* La tarjeta cae colgada del lazo, se balancea y se asienta ladeada. */
+  @keyframes tarjeta-atrapada {
+    0% {
+      opacity: 0;
+      transform: translateY(-40px) rotate(-16deg);
     }
-    to {
-      clip-path: circle(50% at 50% 50%);
+    45% {
+      opacity: 1;
+      transform: translateY(4px) rotate(4deg);
+    }
+    70% {
+      transform: rotate(-5deg);
+    }
+    100% {
+      transform: rotate(-3deg);
     }
   }
 
-  @keyframes lazo-aprieta {
-    0% {
-      transform: scale(1.14);
+  @keyframes foto-revela {
+    from {
+      clip-path: inset(0 0 100% 0 round 14px);
     }
-    40% {
-      transform: scale(0.95);
-    }
-    70% {
-      transform: scale(1.03);
-    }
-    100% {
-      transform: scale(1);
+    to {
+      clip-path: inset(0 0 0 0 round 14px);
     }
   }
 
@@ -700,48 +732,34 @@ const datos = {
     }
   }
 
+  /* Nombre y precio del plato atrapado, al pie de la tarjeta. */
   .hero__pies {
-    position: absolute;
-    left: 0;
-    top: 2%;
-    width: 62%;
-    z-index: 5;
-    text-align: left;
+    padding: 8px 4px 0;
+    text-align: center;
   }
 
   .hero__pies a {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 8px;
+    display: flex;
     flex-wrap: wrap;
-    padding: 6px 12px 5px;
-    background: var(--c-negro);
-    color: var(--c-beige);
+    align-items: baseline;
+    justify-content: center;
+    gap: 2px 8px;
+    color: var(--texto);
     text-decoration: none;
     font-family: var(--f-label);
     font-weight: 700;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    line-height: 1.15;
+    line-height: 1.1;
   }
 
   .hero__pie-nombre {
-    font-size: clamp(0.9rem, 3.6vw, 1.06rem);
+    font-size: clamp(0.82rem, 3.4vw, 1.08rem);
   }
 
   .hero__pie-precio {
-    color: var(--c-arena);
-    font-size: clamp(0.9rem, 3.6vw, 1.06rem);
-  }
-
-  .hero__pies small {
-    flex-basis: 100%;
-    font-family: var(--f-body);
-    font-weight: 400;
-    font-size: 0.7rem;
-    letter-spacing: 0.02em;
-    text-transform: none;
-    color: var(--hondo-suave);
+    color: var(--c-rojo-texto);
+    font-size: clamp(0.82rem, 3.4vw, 1.08rem);
   }
 
   @media (min-width: 900px) {
@@ -806,7 +824,7 @@ const datos = {
     overflow: hidden;
     background: var(--hondo);
     color: var(--hondo-texto);
-    border-block: 1px solid var(--c-negro);
+    border-block: 3px solid var(--c-rojo);
   }
 
   .cinta__pista {
@@ -836,7 +854,7 @@ const datos = {
   .cinta__espuela {
     width: 12px;
     height: 12px;
-    background: var(--c-arena-oscura);
+    background: var(--hondo-resalte);
     clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
   }
 
@@ -846,133 +864,156 @@ const datos = {
     }
   }
 
-  /* ── House plates: arcos de misión en una composición escalonada ── */
+  /* ── Our most loved dishes: tarjetas como las del menú, en fila ── */
   .platos {
     position: relative;
     z-index: 1;
-    padding-block: clamp(56px, 10vw, 128px) clamp(64px, 11vw, 140px);
-  }
-
-  .platos__rejilla {
-    display: grid;
-    gap: clamp(32px, 5vw, 56px);
+    padding-block: clamp(56px, 9vw, 112px);
   }
 
   .platos__cabeza {
     display: grid;
-    justify-items: start;
-    align-content: start;
     gap: 14px;
-    /* El título se mide contra su columna, no contra la ventana. */
-    container-type: inline-size;
+    justify-items: start;
+    margin-bottom: clamp(24px, 4vw, 44px);
   }
 
   .platos__titulo {
     display: grid;
-    line-height: 0.86;
-  }
-
-  .platos__titulo .display {
-    font-size: clamp(2.6rem, 19cqi, 6.4rem);
+    line-height: 0.9;
   }
 
   .platos__titulo .serif {
-    font-size: clamp(2.8rem, 21cqi, 6.6rem);
-    margin-left: 0.6em;
-    margin-top: -0.06em;
-    color: var(--texto-suave);
+    font-size: clamp(1.9rem, 5vw, 3rem);
+    color: var(--c-rojo-texto);
+  }
+
+  .platos__titulo .display {
+    font-size: clamp(2.3rem, 7vw, 4.6rem);
   }
 
   .platos__intro {
-    max-width: 34ch;
+    max-width: 46ch;
     color: var(--texto-suave);
     font-size: 1.05rem;
   }
 
+  /* Teléfono: carrusel deslizable con la siguiente tarjeta asomando. */
   .platos__lista {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 36px 18px;
-    align-items: start;
+    grid-auto-flow: column;
+    grid-auto-columns: min(78%, 300px);
+    gap: 16px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding: 8px var(--gutter) 18px;
+    margin-inline: calc(var(--gutter) * -1);
+    scroll-padding-inline: var(--gutter);
   }
 
-  /* Escalonado: la segunda columna baja, como fotos clavadas en una pared. */
-  .plato:nth-child(even) {
-    margin-top: 56px;
+  .platos__lista::-webkit-scrollbar {
+    display: none;
   }
 
-  .plato__enlace {
-    display: grid;
-    justify-items: center;
-    gap: 14px;
-    text-decoration: none;
-    color: inherit;
-  }
-
-  .plato__texto {
-    display: grid;
-    justify-items: center;
-    gap: 2px;
-    text-align: center;
-  }
-
-  .plato__cat {
-    font-size: 1.15rem;
-    color: var(--texto-suave);
-  }
-
-  .plato__nombre {
-    font-family: var(--f-label);
-    font-weight: 700;
-    font-size: 1.1rem;
-    line-height: 1.15;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat;
-    transition: background-size var(--t-base) var(--ease-rope);
-  }
-
-  .plato__precio {
-    font-family: var(--f-display);
-    font-size: 1.05rem;
-  }
-
-  @media (hover: hover) {
-    .plato__enlace:hover .plato__nombre {
-      background-size: 100% 1px;
-    }
+  .plato {
+    scroll-snap-align: start;
   }
 
   @media (min-width: 900px) {
-    .platos__rejilla {
-      grid-template-columns: minmax(260px, 0.8fr) minmax(0, 2.2fr);
-      align-items: start;
-    }
-
     .platos__cabeza {
-      position: sticky;
-      top: calc(var(--header-h) + 40px);
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+      align-items: end;
+      gap: 24px 40px;
     }
 
     .platos__lista {
+      grid-auto-flow: row;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 24px;
+      gap: 22px;
+      overflow: visible;
+      padding: 8px 0 0;
+      margin: 0;
     }
 
+    /* Escalonadas apenas, como fotos clavadas en una pared. */
     .plato:nth-child(even) {
-      margin-top: 0;
+      margin-top: 28px;
+    }
+  }
+
+  /* ── Reservar: franja verde con greca, al final del inicio ── */
+  .reservar {
+    position: relative;
+    z-index: 1;
+    background: var(--hondo);
+    color: var(--hondo-texto);
+    padding-bottom: clamp(48px, 7vw, 88px);
+  }
+
+  .reservar > .greca {
+    --greca-color: var(--c-rojo);
+    margin-bottom: clamp(36px, 6vw, 72px);
+  }
+
+  .reservar__fila {
+    display: grid;
+    gap: 24px;
+    align-items: center;
+  }
+
+  .reservar__kicker {
+    color: var(--hondo-resalte);
+  }
+
+  .reservar__titulo {
+    margin-top: 10px;
+    line-height: 0.95;
+  }
+
+  .reservar__titulo .display {
+    font-size: clamp(2.2rem, 6.4vw, 4.2rem);
+  }
+
+  .reservar__titulo .serif {
+    font-size: clamp(2.4rem, 7vw, 4.6rem);
+    color: var(--hondo-resalte);
+  }
+
+  .reservar__intro {
+    margin-top: 12px;
+    max-width: 48ch;
+    color: var(--hondo-suave);
+    font-size: 1.05rem;
+  }
+
+  .reservar__acciones {
+    display: grid;
+    justify-items: start;
+    gap: 6px;
+  }
+
+  .reservar__btn {
+    --btn-bg: var(--c-rojo);
+    --btn-borde: var(--c-rojo);
+  }
+
+  .reservar__tel {
+    color: var(--hondo-texto);
+  }
+
+  @media (min-width: 900px) {
+    .reservar__fila {
+      grid-template-columns: minmax(0, 1.4fr) auto;
+      gap: 48px;
     }
 
-    .plato:nth-child(2) {
-      margin-top: 120px;
+    .reservar__acciones {
+      justify-items: center;
     }
+  }
 
-    .plato:nth-child(3) {
-      margin-top: 40px;
-    }
-
-    .plato:nth-child(4) {
-      margin-top: 170px;
-    }
+  :global(.inicio__papel) {
+    margin-bottom: -6px;
   }
 </style>

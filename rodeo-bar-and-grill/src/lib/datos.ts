@@ -6,6 +6,9 @@ import negocioYaml from '../data/negocio.yaml?raw';
 import temporadaYaml from '../data/temporada.yaml?raw';
 import destacadosYaml from '../data/destacados.yaml?raw';
 import portadaYaml from '../data/portada.yaml?raw';
+import reservacionesYaml from '../data/reservaciones.yaml?raw';
+import { instanteLocal } from './hora.ts';
+import { validarConfig, estadoReservas, ZONA } from './reservas.ts';
 
 function validar<T>(esquema: z.ZodType<T>, texto: string, archivo: string): T {
   const r = esquema.safeParse(parse(texto));
@@ -61,7 +64,12 @@ const esquemaTemporada = z.object({
 export const NEGOCIO = validar(esquemaNegocio, negocioYaml, 'negocio.yaml');
 export const TEMPORADA_DATOS = validar(esquemaTemporada, temporadaYaml, 'temporada.yaml');
 export const DESTACADOS = validar(z.array(z.string()), destacadosYaml, 'destacados.yaml');
+/** Reservaciones en línea (src/data/reservaciones.yaml). El servidor usa el mismo archivo. */
+export const RESERVAS = validarConfig(parse(reservacionesYaml));
+export const RESERVAS_ESTADO = estadoReservas(RESERVAS);
 export const PORTADA = validar(z.object({ galeria: z.array(z.string()).min(1) }), portadaYaml, 'portada.yaml');
+
+if (NEGOCIO.zona_horaria !== ZONA) throw new Error(`negocio.yaml: zona_horaria debe ser ${ZONA} (la usan las reservaciones).`);
 
 const d = NEGOCIO.direccion;
 export const DIRECCION_LINEA = `${d.calle}, ${d.ciudad}, ${d.estado} ${d.cp}`;
@@ -71,37 +79,6 @@ export const MAPAS = {
   apple: `https://maps.apple.com/?q=${encodeURIComponent(NEGOCIO.nombre)}&address=${encodeURIComponent(DIRECCION_LINEA)}`,
 };
 export const TEL_HREF = `tel:${NEGOCIO.telefono.enlace}`;
-
-/** Diferencia en minutos entre la hora local de `zona` y UTC en el instante `t`. */
-function desfaseMinutos(t: number, zona: string): number {
-  const partes = new Intl.DateTimeFormat('en-US', {
-    timeZone: zona,
-    hourCycle: 'h23',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  }).formatToParts(new Date(t));
-  const v = (tipo: string) => Number(partes.find((p) => p.type === tipo)?.value);
-  return (Date.UTC(v('year'), v('month') - 1, v('day'), v('hour'), v('minute'), v('second')) - t) / 60000;
-}
-
-/** Convierte "AAAA-MM-DDTHH:MM" en hora local de `zona` al instante UTC equivalente (respeta horario de verano). */
-export function instanteLocal(fechaHora: string, zona: string): Date {
-  const [f, h] = fechaHora.split('T');
-  const [a, m, dia] = f.split('-').map(Number);
-  const [hh, mm] = h.split(':').map(Number);
-  const pared = Date.UTC(a, m - 1, dia, hh, mm);
-  let t = pared;
-  for (let i = 0; i < 3; i++) {
-    const siguiente = pared - desfaseMinutos(t, zona) * 60000;
-    if (siguiente === t) break;
-    t = siguiente;
-  }
-  return new Date(t);
-}
 
 const fin = instanteLocal(TEMPORADA_DATOS.termina, TEMPORADA_DATOS.zona_horaria);
 const zona = TEMPORADA_DATOS.zona_horaria;

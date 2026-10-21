@@ -1,0 +1,277 @@
+---
+// Botones flotantes de acceso rápido: Llamar, Reservar y Ver menú, siempre a mano al desplazarse.
+// · Escritorio: columna de botones redondos abajo a la derecha; el nombre se despliega a la
+//   izquierda al pasar el cursor o con el foco del teclado.
+// · Teléfono: los mismos botones, más chicos, encima de la barra inferior (nunca la tapan). Para no
+//   tapar el contenido al leer, se esconden al bajar y vuelven al subir; también mientras se
+//   escribe en un formulario (teclado abierto).
+// Cada botón tiene su nombre accesible; el número de teléfono es el de src/data/negocio.yaml.
+import Icono, { type NombreIcono } from './Icono.astro';
+import type { Pagina } from './Cabecera.astro';
+import { NEGOCIO, TEL_HREF } from '../lib/datos';
+
+interface Props {
+  actual?: Pagina;
+}
+const { actual } = Astro.props;
+const botones: { href: string; texto: string; etiqueta: string; icono: NombreIcono; clase: string; pagina?: Pagina }[] = [
+  { href: TEL_HREF, texto: 'Call us', etiqueta: `Call ${NEGOCIO.nombre} at ${NEGOCIO.telefono.visible}`, icono: 'telefono', clase: 'llamar' },
+  { href: '/reservations/#reservar', texto: 'Reserve', etiqueta: 'Reserve a table', icono: 'calendario', clase: 'reservar', pagina: 'reservas' },
+  { href: '/menu/', texto: 'View menu', etiqueta: 'View the menu', icono: 'menu', clase: 'menu', pagina: 'menu' },
+];
+---
+
+<nav class="rapidos" aria-label="Quick actions">
+  <ul>
+    {
+      botones.map((b, i) => (
+        <li style={`--i:${i}`}>
+          <a
+            class={`rapido rapido--${b.clase}`}
+            href={b.href}
+            aria-label={b.etiqueta}
+            aria-current={b.pagina && b.pagina === actual ? 'page' : undefined}
+          >
+            <span class="rapido__texto" aria-hidden="true">
+              {b.texto}
+            </span>
+            <span class="rapido__icono">
+              <Icono nombre={b.icono} />
+            </span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<script>
+  const rapidos = document.querySelector<HTMLElement>('.rapidos');
+  const movil = window.matchMedia('(max-width: 899px)');
+  if (rapidos) {
+    let ultimo = window.scrollY;
+    let pendiente = false;
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (pendiente) return;
+        pendiente = true;
+        requestAnimationFrame(() => {
+          pendiente = false;
+          const y = window.scrollY;
+          if (Math.abs(y - ultimo) < 8) return;
+          rapidos.classList.toggle('rapidos--oculto', movil.matches && y > ultimo && y > 120);
+          ultimo = y;
+        });
+      },
+      { passive: true },
+    );
+    // Escribiendo en un formulario (teclado del teléfono abierto): fuera del camino.
+    const esCampo = (e: Event) => (e.target as Element).matches?.('input, textarea, select');
+    document.addEventListener('focusin', (e) => esCampo(e) && movil.matches && rapidos.classList.add('rapidos--escribiendo'));
+    document.addEventListener('focusout', (e) => esCampo(e) && rapidos.classList.remove('rapidos--escribiendo'));
+    // Si un botón recibe el foco del teclado, siempre a la vista.
+    rapidos.addEventListener('focusin', () => rapidos.classList.remove('rapidos--oculto'));
+  }
+</script>
+
+<style>
+  .rapidos {
+    position: fixed;
+    right: max(12px, env(safe-area-inset-right, 0px));
+    bottom: calc(var(--dock-h) + var(--safe-b) + 12px);
+    z-index: 45;
+  }
+
+  .rapidos {
+    transition:
+      transform var(--t-base) var(--ease-out),
+      opacity var(--t-base) var(--ease-out);
+  }
+
+  .rapidos--oculto,
+  .rapidos--escribiendo {
+    transform: translateX(calc(100% + 24px));
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .rapidos ul {
+    display: grid;
+    justify-items: end;
+    gap: 10px;
+  }
+
+  .rapido {
+    --tam: 48px;
+    --fondo-boton: var(--c-verde);
+    position: relative;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: #fff;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .rapido__icono {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: var(--tam);
+    height: var(--tam);
+    border-radius: 50%;
+    background: var(--fondo-boton);
+    /* Doble filete blanco y verde: la misma firma de las placas del menú. */
+    box-shadow:
+      0 0 0 2px #fff,
+      0 0 0 3.5px var(--c-verde),
+      0 12px 24px -10px rgb(1 49 33 / 0.6);
+    transition:
+      transform var(--t-base) var(--ease-buck),
+      box-shadow var(--t-base) var(--ease-out);
+  }
+
+  .rapido__icono :global(svg) {
+    width: 22px;
+    height: 22px;
+  }
+
+  .rapido--reservar {
+    --fondo-boton: var(--c-rojo);
+  }
+
+  .rapido--llamar {
+    --fondo-boton: #fff;
+    color: var(--c-verde);
+  }
+
+  /* El nombre aparece al lado del botón: oculto hasta pasar el cursor o enfocar. */
+  .rapido__texto {
+    position: absolute;
+    right: calc(100% + 10px);
+    padding: 7px 12px 6px;
+    border-radius: 999px;
+    background: var(--c-negro);
+    color: #fff;
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateX(8px);
+    pointer-events: none;
+    transition:
+      opacity var(--t-fast),
+      transform var(--t-base) var(--ease-out);
+  }
+
+  .rapido:focus-visible {
+    outline: none;
+  }
+
+  .rapido:focus-visible .rapido__icono {
+    box-shadow:
+      0 0 0 2px #fff,
+      0 0 0 3.5px var(--c-verde),
+      0 0 0 6.5px var(--c-negro);
+  }
+
+  .rapido:focus-visible .rapido__texto {
+    opacity: 1;
+    transform: none;
+  }
+
+  @media (hover: hover) {
+    .rapido:hover .rapido__icono {
+      transform: translateY(-3px) rotate(-8deg) scale(1.06);
+    }
+
+    .rapido:hover .rapido__texto {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .rapido:active .rapido__icono {
+    transform: scale(0.92);
+  }
+
+  .rapido[aria-current='page'] .rapido__icono {
+    box-shadow:
+      0 0 0 2px #fff,
+      0 0 0 4px var(--c-amarillo),
+      0 12px 24px -10px rgb(1 49 33 / 0.6);
+  }
+
+  /* El botón de reservar late suavemente de vez en cuando (no en su propia página). */
+  :global(html[data-motion='on']) .rapido--reservar:not([aria-current]) .rapido__icono::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    border: 2px solid var(--c-rojo);
+    animation: latido 3.2s ease-out 2s infinite;
+    pointer-events: none;
+  }
+
+  @keyframes latido {
+    0% {
+      transform: scale(1);
+      opacity: 0.8;
+    }
+    40%,
+    100% {
+      transform: scale(1.5);
+      opacity: 0;
+    }
+  }
+
+  /* Entrada: aparecen uno tras otro, con un brinco, después del confeti. */
+  :global(html[data-motion='on']) .rapidos li {
+    animation: aparecer 0.6s var(--ease-buck) backwards;
+    animation-delay: calc(0.9s + var(--i) * 0.1s);
+  }
+
+  @keyframes aparecer {
+    from {
+      opacity: 0;
+      transform: translateY(16px) scale(0.6);
+    }
+  }
+
+  /* Teléfono: un poco más chicos y pegados al borde, sobre la barra inferior. */
+  @media (max-width: 899px) {
+    .rapidos ul {
+      gap: 8px;
+    }
+
+    .rapido {
+      --tam: 44px;
+    }
+
+    .rapido__icono :global(svg) {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  @media (min-width: 900px) {
+    .rapidos {
+      right: 24px;
+      bottom: 24px;
+    }
+
+    .rapido {
+      --tam: 54px;
+    }
+  }
+
+  /* Al imprimir no tienen sentido. */
+  @media print {
+    .rapidos {
+      display: none;
+    }
+  }
+</style>

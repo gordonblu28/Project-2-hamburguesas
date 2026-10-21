@@ -1,0 +1,113 @@
+---
+// Papel picado: banderitas de papel recortado colgadas de un cordel, en verde, blanco y rojo
+// (en Halloween, con la paleta de la noche: los colores salen de los tokens --mx-*).
+// Cada bandera tiene recortes de verdad (flor, rombos, puntos) y se mece despacio; con movimiento
+// reducido quedan quietas. Es decoración: los lectores de pantalla no la anuncian.
+interface Props {
+  /** Cuántas banderas (las que no caben se recortan al ancho del contenedor). */
+  cantidad?: number;
+  class?: string;
+}
+
+const { cantidad = 24, class: clase } = Astro.props;
+const id = `pp-${Math.random().toString(36).slice(2, 8)}`;
+const colores = ['verde', 'blanco', 'rojo'] as const;
+// Borde inferior en picos y tres diseños de recorte (huecos con fill-rule evenodd).
+const contorno = 'M2 4H58V58L53 64 48 58 43 64 38 58 33 64 28 58 23 64 18 58 13 64 8 58 2 64Z';
+const circulo = (cx: number, cy: number, r: number) => `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${r * 2} 0a${r} ${r} 0 1 0 ${-r * 2} 0Z`;
+const rombo = (cx: number, cy: number, r: number) => `M${cx} ${cy - r}L${cx + r} ${cy} ${cx} ${cy + r} ${cx - r} ${cy}Z`;
+const puntos = [10, 20, 30, 40, 50].map((x) => circulo(x, 11, 1.6)).join('');
+const disenos = [
+  // Flor de ocho pétalos
+  [circulo(30, 33, 4), ...[0, 45, 90, 135, 180, 225, 270, 315].map((g) => {
+    const r = (g * Math.PI) / 180;
+    return circulo(30 + Math.cos(r) * 11, 33 + Math.sin(r) * 11, 3.6);
+  }), puntos].join(''),
+  // Rombos en cruz
+  [rombo(30, 33, 9), rombo(30, 33, 3.2), rombo(15, 33, 4.5), rombo(45, 33, 4.5), rombo(30, 19, 3.5), rombo(30, 47, 3.5), puntos].join(''),
+  // Sol de puntos
+  [circulo(30, 33, 7), ...Array.from({ length: 12 }, (_, i) => {
+    const r = (i * 30 * Math.PI) / 180;
+    return circulo(30 + Math.cos(r) * 14, 33 + Math.sin(r) * 14, 2);
+  }), puntos].join(''),
+];
+---
+
+<div class:list={['papel-picado', clase]} aria-hidden="true">
+  <ul class="papel-picado__cordel">
+    {
+      Array.from({ length: cantidad }, (_, i) => (
+        <li class={`bandera bandera--${colores[i % 3]}`} style={`--i:${i}`}>
+          <svg viewBox="0 0 60 66" focusable="false">
+            <path d={contorno + disenos[i % disenos.length]} fill-rule="evenodd" />
+          </svg>
+        </li>
+      ))
+    }
+  </ul>
+</div>
+
+<style>
+  .papel-picado {
+    --ancho-bandera: clamp(30px, 4.2vw, 52px);
+    position: relative;
+    overflow: hidden;
+    pointer-events: none;
+    padding-top: 2px;
+  }
+
+  /* Cordel: una línea apenas curva de la que cuelgan las banderas. */
+  .papel-picado__cordel {
+    display: flex;
+    gap: 6px;
+    width: max-content;
+    min-width: 100%;
+    padding-inline: 4px;
+    border-top: 1.5px solid var(--cuerda-oscura);
+  }
+
+  .bandera {
+    flex: none;
+    width: var(--ancho-bandera);
+    transform-origin: 50% 0;
+  }
+
+  /* Alternan un poco de altura, como colgadas a mano. */
+  .bandera:nth-child(even) {
+    margin-top: 3px;
+  }
+
+  .bandera svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    filter: drop-shadow(0 3px 2px rgb(20 18 15 / 0.18));
+  }
+
+  .bandera--verde path {
+    fill: var(--mx-verde);
+  }
+
+  .bandera--blanco path {
+    fill: var(--mx-blanco);
+  }
+
+  .bandera--rojo path {
+    fill: var(--mx-rojo);
+  }
+
+  :global(html[data-motion='on']) .bandera {
+    animation: mecerse 4.6s ease-in-out infinite alternate;
+    animation-delay: calc(var(--i) * -0.37s);
+  }
+
+  @keyframes mecerse {
+    from {
+      transform: rotate(-4deg) skewX(2deg);
+    }
+    to {
+      transform: rotate(4deg) skewX(-2deg);
+    }
+  }
+</style>

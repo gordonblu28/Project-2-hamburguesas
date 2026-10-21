@@ -1,0 +1,67 @@
+# Reservaciones en línea con depósito del 50 %.
+# Lo leen la página /reservations/ (para mostrar precios y reglas) y el servidor
+# (worker/index.ts), que es quien calcula y cobra: cambiar este archivo y volver a publicar
+# (npm run build && npm run deploy:workers) basta para cambiar precios, horarios o cupo.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# PENDIENTE (dueño del restaurante): mientras `tarifa.monto` esté vacío o el `horario`
+# no tenga turnos, la página muestra el formulario con un aviso, NO ofrece horarios y
+# NO cobra ni confirma reservas en línea: pide llamar al restaurante.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# false = apaga las reservas en línea (la página pide llamar).
+activas: true
+
+moneda: usd
+
+# Cuánto cuesta reservar (el "total de la reserva"; NO es la cuenta de la comida).
+#   tipo: por_persona  → monto × número de personas  (ej.: $10 por persona, 4 personas = $40)
+#   tipo: por_reserva  → monto fijo por reserva      (ej.: $25 por mesa)
+# PENDIENTE: el restaurante debe fijar el monto (en dólares, ej. 10.00).
+tarifa:
+  tipo: por_persona
+  monto: null
+
+# Porcentaje del total que se cobra en línea como depósito. El resto se paga en el restaurante.
+deposito_porcentaje: 50
+
+# Horario en que se aceptan reservas, por día (hora local de Texas). Cada tramo genera horarios
+# de llegada cada `intervalo_minutos`, desde `desde` hasta `hasta` (incluido: es la ÚLTIMA
+# llegada, no la hora de cierre). Un día vacío ([]) no acepta reservas en línea.
+# PENDIENTE: el horario del restaurante aún no se conoce (ver negocio.yaml). Ejemplo:
+#   viernes:
+#     - { desde: "12:00", hasta: "14:30" }
+#     - { desde: "17:00", hasta: "21:00" }
+horario:
+  lunes: []
+  martes: []
+  miercoles: []
+  jueves: []
+  viernes: []
+  sabado: []
+  domingo: []
+
+intervalo_minutos: 30
+
+# Cuánto tiempo ocupa una mesa una reserva: dos reservas se cruzan si sus horarios se traslapan.
+duracion_minutos: 90
+
+# Cupo: cuántas personas CON RESERVA puede haber sentadas al mismo tiempo (no es la capacidad
+# total del local: deje lugar para quien llega sin reservar). El servidor no acepta una reserva
+# que lo supere, aunque dos personas reserven en el mismo segundo.
+cupo_personas: 40
+
+# Tamaño de grupo que se reserva en línea (grupos más grandes: por teléfono).
+personas_min: 1
+personas_max: 12
+
+# Con cuánta anticipación mínima (minutos) y hasta cuántos días adelante se puede reservar.
+anticipacion_minima_minutos: 120
+dias_adelante: 60
+
+# Fechas sin reservas en línea (feriados, eventos privados). Formato "AAAA-MM-DD".
+cerrado: []
+
+# Tiempo que se aparta la mesa mientras la persona paga (Stripe exige al menos 30 minutos).
+# Si no paga en ese tiempo, el lugar se libera solo.
+minutos_para_pagar: 30

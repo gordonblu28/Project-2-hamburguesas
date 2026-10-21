@@ -1,0 +1,224 @@
+---
+// Panel del personal: reservas por fecha y estado, con datos de contacto, depósito y peticiones.
+// Protegido por la clave ADMIN_TOKEN del servidor (se escribe aquí una vez por pestaña; no se
+// guarda en el sitio). No se indexa. Los reembolsos se hacen en el panel de Stripe.
+import Base from '../../../layouts/Base.astro';
+import Icono from '../../../components/Icono.astro';
+import { NEGOCIO } from '../../../lib/datos';
+---
+
+<Base titulo={`Reservations panel · ${NEGOCIO.nombre}`} descripcion="Staff reservations panel." indexar={false} clase="pagina-admin">
+  <section class="wrap admin" data-admin>
+    <header class="admin__cabeza">
+      <h1 class="display admin__titulo">Reservations</h1>
+      <p class="admin__intro">Staff only. Reservations appear here once the deposit is paid (or while a guest is paying).</p>
+    </header>
+
+    <form class="admin__acceso" data-acceso>
+      <label for="a-clave">Access key</label>
+      <div class="admin__fila">
+        <input id="a-clave" type="password" autocomplete="current-password" required />
+        <button class="btn" type="submit"><Icono nombre="candado" /> Open</button>
+      </div>
+      <p class="admin__error" data-acceso-error role="alert" hidden></p>
+    </form>
+
+    <div class="admin__panel" data-panel hidden>
+      <form class="admin__filtros" data-filtros>
+        <label>From <input type="date" name="from" /></label>
+        <label>To <input type="date" name="to" /></label>
+        <label>
+          Status
+          <select name="status">
+            <option value="">All</option>
+            <option value="confirmada">Confirmed</option>
+            <option value="procesando_pago">Payment processing</option>
+            <option value="pendiente_pago">Paying now</option>
+            <option value="sentada">Seated</option>
+            <option value="completada">Completed</option>
+            <option value="no_llego">No-show</option>
+            <option value="cancelada">Cancelled</option>
+            <option value="vencida">Expired</option>
+            <option value="pago_fallido">Payment failed</option>
+            <option value="revision">Needs review</option>
+          </select>
+        </label>
+        <button class="btn" type="submit">Refresh</button>
+        <button class="btn btn--ghost" type="button" data-salir>Lock</button>
+      </form>
+      <p class="admin__resumen" data-resumen aria-live="polite"></p>
+      <div class="admin__lista" data-lista></div>
+      <p class="admin__nota">
+        Cancelling here frees the table but does not refund the deposit — issue refunds from the Stripe dashboard (the payment link is on each reservation).
+      </p>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { iniciarAdmin } from '../../../scripts/admin-reservas';
+  iniciarAdmin();
+</script>
+
+<style>
+  .admin {
+    display: grid;
+    gap: 18px;
+    padding-block: 28px 80px;
+  }
+
+  .admin__titulo {
+    font-size: clamp(2rem, 6vw, 3.2rem);
+  }
+
+  .admin__intro,
+  .admin__nota {
+    color: var(--texto-suave);
+  }
+
+  .admin__acceso,
+  .admin__filtros {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 10px 14px;
+    padding: 16px;
+    border-radius: var(--radio-tarjeta);
+    background: var(--tarjeta);
+    border: 1.5px solid var(--tarjeta-borde);
+  }
+
+  .admin__acceso {
+    display: grid;
+    max-width: 480px;
+  }
+
+  .admin__fila {
+    display: flex;
+    gap: 10px;
+  }
+
+  label {
+    display: grid;
+    gap: 4px;
+    font-family: var(--f-label);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  input,
+  select {
+    min-height: 46px;
+    padding: 8px 12px;
+    border: 1.5px solid rgb(20 18 15 / 0.28);
+    border-radius: 10px;
+    background: #fff;
+    font: 400 1rem var(--f-body);
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .admin__fila input {
+    flex: 1;
+  }
+
+  .admin__error {
+    color: var(--c-rojo-texto);
+    font-weight: 600;
+  }
+
+  .admin__panel {
+    display: grid;
+    gap: 14px;
+  }
+
+  .admin__resumen {
+    font-family: var(--f-label);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .admin__lista {
+    display: grid;
+    gap: 12px;
+  }
+
+  .admin__lista :global(.res) {
+    display: grid;
+    gap: 6px 18px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: var(--tarjeta);
+    border: 1.5px solid var(--tarjeta-borde);
+    border-left: 6px solid var(--c-verde);
+  }
+
+  .admin__lista :global(.res[data-estado='pendiente_pago']),
+  .admin__lista :global(.res[data-estado='procesando_pago']),
+  .admin__lista :global(.res[data-estado='revision']) {
+    border-left-color: #d9a520;
+  }
+
+  .admin__lista :global(.res[data-estado='cancelada']),
+  .admin__lista :global(.res[data-estado='vencida']),
+  .admin__lista :global(.res[data-estado='pago_fallido']),
+  .admin__lista :global(.res[data-estado='no_llego']) {
+    border-left-color: var(--c-rojo);
+    opacity: 0.8;
+  }
+
+  .admin__lista :global(.res__cabeza) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 14px;
+  }
+
+  .admin__lista :global(.res__cuando) {
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 1.25rem;
+    letter-spacing: 0.04em;
+  }
+
+  .admin__lista :global(.res__estado) {
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: var(--fondo-medio);
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .admin__lista :global(.res__datos) {
+    color: var(--texto-suave);
+    white-space: pre-line;
+  }
+
+  .admin__lista :global(.res__acciones) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .admin__lista :global(.res__acciones button) {
+    min-height: 38px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1.5px solid var(--linea);
+    background: #fff;
+    font-family: var(--f-label);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .admin__lista :global(.res__acciones button:hover) {
+    border-color: var(--c-verde);
+  }
+</style>

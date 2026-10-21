@@ -15,6 +15,7 @@ import Cabecera, { type Pagina } from '../components/Cabecera.astro';
 import Dock from '../components/Dock.astro';
 import Puerta from '../components/Puerta.astro';
 import Pie from '../components/Pie.astro';
+import BotonesRapidos from '../components/BotonesRapidos.astro';
 import { NEGOCIO, TEMPORADA } from '../lib/datos';
 
 interface Props {
@@ -113,16 +114,19 @@ const colorNavegador = tema === 'halloween' ? '#120a1a' : '#e7dcc8';
     </main>
     <Pie />
     <Dock actual={actual} />
+    <BotonesRapidos actual={actual} />
     <Puerta />
     <script>
       import { iniciarMovimiento } from '../scripts/movimiento';
       import { iniciarPuerta } from '../scripts/puerta';
       import { iniciarRevelado } from '../scripts/revelar';
       import { iniciarCuentas } from '../scripts/cuenta';
+      import { iniciarConfeti } from '../scripts/confeti';
       iniciarMovimiento();
       iniciarPuerta();
       iniciarRevelado();
       iniciarCuentas();
+      iniciarConfeti();
     </script>
   </body>
 </html>

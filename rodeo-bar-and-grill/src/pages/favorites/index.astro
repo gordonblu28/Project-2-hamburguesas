@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
-import Medallon from '../../components/Medallon.astro';
+import Foto from '../../components/Foto.astro';
+import PapelPicado from '../../components/PapelPicado.astro';
 import Icono, { type NombreIcono } from '../../components/Icono.astro';
 import { NEGOCIO, DESTACADOS } from '../../lib/datos';
 import { productos, categorias, foto, precio, precioResumen, rutaProducto, ETIQUETAS, PIE_FOTO } from '../../lib/menu';
@@ -22,6 +23,7 @@ const dos = (n: number) => String(n).padStart(2, '0');
   actual="favoritos"
   clase="pagina-favoritos"
 >
+  <PapelPicado class="favoritos__papel" cantidad={30} />
   <section class="favoritos wrap" data-favoritos aria-labelledby="favoritos-titulo">
     <header class="favoritos__cabeza">
       <h1 id="favoritos-titulo" class="favoritos__titulo">
@@ -51,13 +53,15 @@ const dos = (n: number) => String(n).padStart(2, '0');
                     {d.nombre}
                   </p>
                   <div class="favorito__plato" data-plato>
-                    <Medallon
+                    <Foto
                       img={img}
                       alt={d.nombre}
-                      lado={340}
+                      ancho={420}
+                      proporcion={0.8}
                       icono={icono}
                       marca={img ? undefined : d.numero ? `No. ${d.numero}` : cat.data.corto}
                       prioridad={i === 0}
+                      limitar
                     />
                     <span class="favorito__brillo" aria-hidden="true" />
                   </div>
@@ -243,15 +247,24 @@ const dos = (n: number) => String(n).padStart(2, '0');
     will-change: transform;
   }
 
-  .favorito__plato :global(.medallon) {
-    width: min(var(--lado), 100%);
+  /* La foto va en una tarjeta blanca con filete verde, como las del menú. */
+  .favorito__plato :global(.foto) {
+    box-shadow:
+      0 0 0 8px var(--tarjeta),
+      0 0 0 9.5px var(--tarjeta-borde),
+      0 30px 50px -28px rgb(1 49 33 / 0.7);
+  }
+
+  :global(.favoritos__papel) {
+    margin-bottom: -6px;
   }
 
   /* Brillo que sigue al cursor sobre el plato (profundidad). */
   .favorito__brillo {
     position: absolute;
-    inset: 9%;
-    border-radius: 50%;
+    inset: 0;
+    z-index: 2;
+    border-radius: var(--radio-foto);
     pointer-events: none;
     background: radial-gradient(circle at var(--bx, 30%) var(--by, 25%), rgb(255 255 255 / 0.28), transparent 45%);
     mix-blend-mode: soft-light;

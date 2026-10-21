@@ -1,9 +1,9 @@
 ﻿// Prepara las imágenes del sitio a partir de materiales/originales/ (archivos del cliente).
 //   npm run imagenes
 // - Recorta cada platillo de las fotos del menú impreso (src/assets/platos/<id>.jpg).
-// - Separa al jinete del logo con fondo transparente (src/assets/marca/jinete.png) y crea su
-//   silueta negra (src/assets/marca/jinete-silueta.png), la marca de la identidad beige y negro.
-// - Copia el logo (src/assets/marca/logo.jpg) y crea favicons e imagen para redes (public/).
+// - Separa al jinete del logo con fondo transparente y a todo color (src/assets/marca/jinete.png).
+// - Copia el logo (src/assets/marca/logo.jpg), crea su versión horizontal sin margen
+//   (logo-horizontal.jpg) y los favicons e imagen para redes (public/).
 // - Deja una hoja de revisión con todos los recortes en materiales/revision/.
 import sharp from 'sharp';
 import { mkdir } from 'node:fs/promises';
@@ -173,108 +173,18 @@ async function recortarJinete() {
     .toFile(path.join(dirMarca, 'jinete.png'));
 }
 
-// Silueta del jinete: todo el dibujo en negro y sin el borde blanco de calcomanía. Se usa como
-// máscara CSS, así cada página la pinta del color de su paleta (negro, beige o carbón).
-async function siluetaJinete() {
-  const { data, info } = await sharp(path.join(dirMarca, 'jinete.png')).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-  const { width: w, height: h } = info;
-  const n = w * h;
-  // Distancia aproximada (chaflán) de cada píxel marcado al píxel no marcado más cercano.
-  const distancia = (marca) => {
-    const d = new Float32Array(n);
-    for (let p = 0; p < n; p++) d[p] = marca[p] ? 1e6 : 0;
-    const D = Math.SQRT2;
-    for (let y = 0; y < h; y++)
-      for (let x = 0; x < w; x++) {
-        const p = y * w + x;
-        if (!d[p]) continue;
-        d[p] = Math.min(d[p], x > 0 ? d[p - 1] + 1 : 1, y > 0 ? d[p - w] + 1 : 1, x > 0 && y > 0 ? d[p - w - 1] + D : 1, x < w - 1 && y > 0 ? d[p - w + 1] + D : 1);
-      }
-    for (let y = h - 1; y >= 0; y--)
-      for (let x = w - 1; x >= 0; x--) {
-        const p = y * w + x;
-        if (!d[p]) continue;
-        d[p] = Math.min(d[p], x < w - 1 ? d[p + 1] + 1 : 1, y < h - 1 ? d[p + w] + 1 : 1, x < w - 1 && y < h - 1 ? d[p + w + 1] + D : 1, x > 0 && y < h - 1 ? d[p + w - 1] + D : 1);
-      }
-    return d;
-  };
-  const opaco = new Uint8Array(n);
-  for (let p = 0; p < n; p++) opaco[p] = data[p * 4 + 3] > 90 ? 1 : 0;
-  const alExterior = distancia(opaco);
-  const dentro = new Uint8Array(n);
-  for (let p = 0; p < n; p++) {
-    const i = p * 4;
-    const min = Math.min(data[i], data[i + 1], data[i + 2]);
-    const max = Math.max(data[i], data[i + 1], data[i + 2]);
-    // Borde de calcomanía: blanco o gris muy claro sin color. La camisa crema del jinete no entra.
-    const borde = min > 188 && max - min < 34;
-    // La calcomanía tiene, de fuera hacia dentro, una línea negra (≤ 9 px), el borde blanco
-    // (~12 px) y el dibujo: lo que está a menos de 11 px del exterior es la línea de fuera.
-    dentro[p] = opaco[p] && !borde && alExterior[p] > 11 ? 1 : 0;
-  }
-  // Se conserva solo la pieza más grande (quita motas sueltas del borde blanco).
-  const pieza = new Int32Array(n);
-  let mayor = 0;
-  let tamMayor = 0;
-  let actual = 0;
-  for (let p = 0; p < n; p++) {
-    if (!dentro[p] || pieza[p]) continue;
-    actual++;
-    let tam = 0;
-    const cola = [p];
-    pieza[p] = actual;
-    while (cola.length) {
-      const q = cola.pop();
-      tam++;
-      const x = q % w;
-      for (const v of [x > 0 && q - 1, x < w - 1 && q + 1, q - w, q + w]) {
-        if (v === false || v < 0 || v >= n || !dentro[v] || pieza[v]) continue;
-        pieza[v] = actual;
-        cola.push(v);
-      }
-    }
-    if (tam > tamMayor) {
-      tamMayor = tam;
-      mayor = actual;
-    }
-  }
-  const mascara = Buffer.alloc(n);
-  for (let p = 0; p < n; p++) mascara[p] = pieza[p] === mayor ? 255 : 0;
-  // Se dibuja al doble de tamaño: ampliar, desenfocar y volver a umbralizar deja curvas suaves
-  // en lugar de la escalera de píxeles del JPG original (la silueta se ve grande en el inicio).
-  const W = w * 2;
-  const H = h * 2;
-  const alfa = await sharp(mascara, { raw: { width: w, height: h, channels: 1 } })
-    .resize({ width: W, height: H, kernel: 'lanczos3' })
-    .blur(2.8)
-    .threshold(128)
-    .blur(0.7)
-    .extractChannel(0)
-    .raw()
-    .toBuffer();
-  await sharp({ create: { width: W, height: H, channels: 3, background: NEGRO } })
-    .joinChannel(alfa, { raw: { width: W, height: H, channels: 1 } })
-    .png()
-    .toBuffer()
-    .then((b) => sharp(b).trim({ threshold: 1 }).png({ compressionLevel: 9 }).toFile(path.join(dirMarca, 'jinete-silueta.png')));
-}
-
-// Silueta beige sobre un círculo negro: la insignia del sitio.
-async function insigniaSilueta(tam, proporcion, fondo, circular) {
-  const color = await sharp(path.join(dirMarca, 'jinete-silueta.png'))
-    .ensureAlpha()
-    .linear([0, 0, 0, 1], [BEIGE.r, BEIGE.g, BEIGE.b, 0])
-    .toBuffer();
+// Insignia: el jinete a color, tal como está en el logo, sobre el verde del logo.
+async function insigniaJinete(tam, proporcion, circular) {
   const dentro = Math.round(tam * proporcion);
-  const icono = await sharp(color)
+  const icono = await sharp(path.join(dirMarca, 'jinete.png'))
     .resize({ width: dentro, height: dentro, fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
     .png()
     .toBuffer();
   const base = circular
     ? Buffer.from(
-        `<svg xmlns="http://www.w3.org/2000/svg" width="${tam}" height="${tam}"><circle cx="${tam / 2}" cy="${tam / 2}" r="${tam / 2}" fill="rgb(${fondo.r},${fondo.g},${fondo.b})"/></svg>`,
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${tam}" height="${tam}"><circle cx="${tam / 2}" cy="${tam / 2}" r="${tam / 2}" fill="rgb(${VERDE.r},${VERDE.g},${VERDE.b})"/></svg>`,
       )
-    : { create: { width: tam, height: tam, channels: 3, background: fondo } };
+    : { create: { width: tam, height: tam, channels: 3, background: VERDE } };
   return sharp(base).composite([{ input: icono, gravity: 'center' }]).png({ compressionLevel: 9 });
 }
 
@@ -284,10 +194,10 @@ async function favicons() {
     [192, 'favicon-192.png'],
     [512, 'favicon-512.png'],
   ]) {
-    await (await insigniaSilueta(tam, 0.7, NEGRO, true)).toFile(path.join(dirPublic, archivo));
+    await (await insigniaJinete(tam, 0.8, true)).toFile(path.join(dirPublic, archivo));
   }
   // Apple pide fondo opaco y cuadrado.
-  await (await insigniaSilueta(180, 0.72, NEGRO, false)).toFile(path.join(dirPublic, 'apple-touch-icon.png'));
+  await (await insigniaJinete(180, 0.8, false)).toFile(path.join(dirPublic, 'apple-touch-icon.png'));
 }
 
 // Imagen para redes: el logo a color, enmarcado en negro como un letrero sobre fondo beige.
@@ -326,8 +236,12 @@ async function hojaRevision(archivos) {
 const hechos = [];
 for (const r of RECORTES) hechos.push(await recortar(r));
 await sharp(orig('logo-fondo-verde.jpg')).jpeg({ quality: 90, mozjpeg: true }).toFile(path.join(dirMarca, 'logo.jpg'));
+// Logo horizontal para cabecera y pie: el mismo logo a color, sin el margen verde de alrededor.
+await sharp(orig('logo-fondo-verde.jpg'))
+  .extract({ left: 24, top: 96, width: 1702, height: 684 })
+  .jpeg({ quality: 90, mozjpeg: true })
+  .toFile(path.join(dirMarca, 'logo-horizontal.jpg'));
 await recortarJinete();
-await siluetaJinete();
 await favicons();
 await imagenSocial();
 await hojaRevision(hechos);
@@ -336,8 +250,4 @@ await sharp({ create: { width: 520, height: 520, channels: 3, background: '#d020
   .composite([{ input: path.join(dirMarca, 'jinete.png'), gravity: 'center' }])
   .png()
   .toFile(path.join(dirRevision, 'jinete-sobre-color.png'));
-await sharp({ create: { width: 520, height: 520, channels: 3, background: BEIGE } })
-  .composite([{ input: await sharp(path.join(dirMarca, 'jinete-silueta.png')).resize({ width: 460 }).toBuffer(), gravity: 'center' }])
-  .png()
-  .toFile(path.join(dirRevision, 'silueta-sobre-beige.png'));
-console.log(`✓ ${hechos.length} recortes, jinete y su silueta, logo, favicons e imagen social`);
+console.log(`✓ ${hechos.length} recortes, jinete, logo, favicons e imagen social`);

@@ -1,0 +1,397 @@
+---
+// Tarjeta de un platillo: foto arriba en un rectángulo redondeado, nombre y descripción al
+// centro, precio abajo a la izquierda y la acción a la derecha. Todo es texto real (se lee sin
+// JavaScript y lo indexa Google).
+// · En el menú (sin `href`), el nombre es un botón que abre la ficha ampliada; toda la tarjeta
+//   responde al toque. Lleva los datos que usan el buscador y la ficha (src/scripts/menu.ts).
+// · Con `href` (inicio, favoritos), toda la tarjeta es un enlace a ese plato en el menú.
+// Sin foto, la tarjeta lleva una franja de talavera con el número del plato o el ícono de la
+// categoría, nunca la foto de otro plato.
+import Icono, { type NombreIcono } from './Icono.astro';
+import Foto from './Foto.astro';
+import { foto, precio, precioResumen, ETIQUETAS, textoBusqueda, PIE_FOTO, type Producto, type Categoria } from '../lib/menu';
+
+interface Props {
+  producto: Producto;
+  categoria: Categoria;
+  /** Convierte la tarjeta en enlace (fuera del menú). */
+  href?: string;
+  /** Texto de la acción. */
+  accion?: string;
+  /** Muestra el nombre de la categoría sobre el nombre del plato. */
+  conCategoria?: boolean;
+  prioridad?: boolean;
+  /** Etiqueta del título (h3 por omisión). */
+  nivel?: 'h2' | 'h3';
+}
+
+const { producto, categoria, href, accion = href ? 'See dish' : 'Details', conCategoria = false, prioridad = false, nivel: Titulo = 'h3' } = Astro.props;
+const d = producto.data;
+const img = foto(d.foto);
+const resumen = precioResumen(producto);
+const icono: NombreIcono = categoria.data.icono ?? 'estrella';
+const sinPrecio = !resumen && categoria.data.seccion === 'kitchen';
+const enMenu = !href;
+---
+
+<article
+  class:list={['platillo', { 'platillo--foto': img, 'platillo--sin-foto': !img }]}
+  data-producto={enMenu ? producto.id : undefined}
+  data-busqueda={enMenu ? textoBusqueda(producto, categoria) : undefined}
+  data-categoria={enMenu ? categoria.id : undefined}
+>
+  {
+    img ? (
+      <div class="platillo__foto">
+        <Foto img={img} alt={d.nombre} ancho={320} proporcion={0.72} prioridad={prioridad} />
+      </div>
+    ) : (
+      <div class="platillo__sello talavera" aria-hidden="true">
+        <span class="platillo__insignia">{d.numero ? <span class="platillo__numero">{d.numero}</span> : <Icono nombre={icono} />}</span>
+      </div>
+    )
+  }
+
+  <div class="platillo__info">
+    {conCategoria && <p class="platillo__categoria serif">{categoria.data.corto}</p>}
+    <Titulo class="platillo__nombre">
+      {
+        enMenu ? (
+          <button type="button" class="platillo__abrir" data-abrir aria-haspopup="dialog">
+            {d.numero && <span class="visually-hidden">Number {d.numero}: </span>}
+            {d.nombre}
+          </button>
+        ) : (
+          <a class="platillo__abrir" href={href}>
+            {d.nombre}
+          </a>
+        )
+      }
+    </Titulo>
+
+    {
+      d.etiquetas.length > 0 && (
+        <p class="platillo__etiquetas">
+          {d.etiquetas.map((e) => (
+            <span class={`chip chip--${e}`}>
+              {e === 'favorite' && <Icono nombre="estrella" />}
+              {e === 'angus' && <Icono nombre="res" />}
+              {ETIQUETAS[e]}
+            </span>
+          ))}
+        </p>
+      )
+    }
+
+    {d.descripcion && <p class="platillo__desc">{d.descripcion}</p>}
+
+    {
+      d.opciones && (
+        <ul class="platillo__opciones">
+          {d.opciones.map((o) => (
+            <li>
+              <span>{o.nombre}</span>
+              {o.precio !== undefined && <strong>{precio(o.precio)}</strong>}
+            </li>
+          ))}
+        </ul>
+      )
+    }
+
+    {
+      d.carnes && (
+        <p class="platillo__carnes">
+          <span>Choice of meat:</span> {d.carnes.join(' · ')}
+        </p>
+      )
+    }
+
+    {
+      d.lista && (
+        <ul class="platillo__lista">
+          {d.lista.map((n) => (
+            <li>{n}</li>
+          ))}
+        </ul>
+      )
+    }
+  </div>
+
+  <div class="platillo__pie">
+    {resumen && <span class="platillo__precio">{resumen}</span>}
+    {sinPrecio && <span class="platillo__precio platillo__precio--pedir">Ask for price</span>}
+    <span class="platillo__accion" aria-hidden="true">
+      {accion}
+      <Icono nombre="flecha" />
+    </span>
+  </div>
+
+  {
+    enMenu && img && (
+      <template data-foto>
+        <Foto img={img} alt={`${d.nombre} at The Rodeo Bar And Grill`} ancho={400} proporcion={0.75} />
+        <p class="ficha__pie-foto">{PIE_FOTO}</p>
+      </template>
+    )
+  }
+</article>
+
+<style>
+  .platillo {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 10px 10px 14px;
+    border: 1.5px solid var(--tarjeta-borde);
+    border-radius: var(--radio-tarjeta);
+    background: var(--tarjeta);
+    text-align: center;
+    transition:
+      transform var(--t-base) var(--ease-out),
+      box-shadow var(--t-base) var(--ease-out),
+      border-color var(--t-base) var(--ease-out);
+  }
+
+  /* Al pasar el cursor la tarjeta se levanta, el borde se pinta de verde y la foto se acerca. */
+  @media (hover: hover) {
+    .platillo:hover {
+      transform: translateY(-4px);
+      border-color: var(--mx-verde);
+      box-shadow: var(--tarjeta-sombra);
+    }
+
+    .platillo:hover .platillo__foto :global(img[data-activa]) {
+      transform: scale(1.07);
+    }
+
+    .platillo:hover .platillo__accion {
+      background: var(--c-rojo);
+    }
+
+    .platillo:hover .platillo__accion :global(svg) {
+      transform: translateX(3px);
+    }
+  }
+
+  .platillo:active {
+    transform: scale(0.985);
+  }
+
+  .platillo:focus-within {
+    border-color: var(--mx-verde);
+  }
+
+  .platillo__foto {
+    position: relative;
+  }
+
+  /* Sin foto: franja de azulejo con una placa que asoma sobre el borde inferior. */
+  .platillo__sello {
+    position: relative;
+    height: 54px;
+    margin-bottom: 22px;
+    border-radius: var(--radio-foto);
+  }
+
+  .platillo__insignia {
+    position: absolute;
+    left: 50%;
+    bottom: -20px;
+    display: grid;
+    place-items: center;
+    min-width: 46px;
+    height: 46px;
+    padding: 0 10px;
+    border-radius: 12px;
+    background: var(--c-verde);
+    color: #fff;
+    box-shadow:
+      0 0 0 3px var(--tarjeta),
+      0 0 0 4.5px var(--c-rojo);
+    transform: translateX(-50%) rotate(-3deg);
+    transition: transform var(--t-base) var(--ease-buck);
+  }
+
+  @media (hover: hover) {
+    .platillo:hover .platillo__insignia {
+      transform: translateX(-50%) rotate(3deg) scale(1.06);
+    }
+  }
+
+  .platillo__insignia :global(svg) {
+    width: 24px;
+    height: 24px;
+  }
+
+  .platillo__numero {
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 1.15rem;
+    letter-spacing: 0.02em;
+  }
+
+  .platillo__info {
+    display: grid;
+    justify-items: center;
+    align-content: start;
+    gap: 7px;
+    flex: 1;
+    padding: 12px 6px 4px;
+  }
+
+  .platillo__categoria {
+    font-size: 1.05rem;
+    line-height: 1;
+    color: var(--c-rojo-texto);
+  }
+
+  .platillo__nombre {
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 1.28rem;
+    line-height: 1.1;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--texto);
+    text-wrap: balance;
+  }
+
+  .platillo__abrir {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+    text-align: inherit;
+    text-transform: inherit;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  /* Toda la tarjeta abre la ficha (o el enlace). */
+  .platillo__abrir::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border-radius: var(--radio-tarjeta);
+  }
+
+  .platillo__abrir:focus-visible {
+    outline: none;
+  }
+
+  .platillo__abrir:focus-visible::after {
+    outline: 2.5px solid var(--mx-verde);
+    outline-offset: 2px;
+  }
+
+  .platillo__etiquetas {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .platillo__desc {
+    max-width: 34ch;
+    color: var(--texto-suave);
+    font-size: 0.96rem;
+    line-height: 1.45;
+    text-wrap: pretty;
+  }
+
+  .platillo__opciones,
+  .platillo__lista {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .platillo__opciones li,
+  .platillo__lista li {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--fondo-medio);
+    box-shadow: inset 0 0 0 1px var(--linea);
+    font-size: 0.9rem;
+    line-height: 1.3;
+  }
+
+  .platillo__opciones strong {
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--c-rojo-texto);
+  }
+
+  .platillo__carnes {
+    font-size: 0.9rem;
+    color: var(--texto-suave);
+  }
+
+  .platillo__carnes span {
+    font-family: var(--f-label);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--texto);
+  }
+
+  .platillo__pie {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 12px 6px 0;
+    border-top: 1.5px dashed var(--linea);
+  }
+
+  .platillo__precio {
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 1.45rem;
+    line-height: 1;
+    color: var(--texto);
+    white-space: nowrap;
+  }
+
+  .platillo__precio--pedir {
+    font-size: 0.9rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--texto-suave);
+  }
+
+  .platillo__accion {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: var(--acento);
+    color: var(--sobre-acento);
+    font-family: var(--f-label);
+    font-weight: 700;
+    font-size: 0.86rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition: background-color var(--t-base) var(--ease-out);
+  }
+
+  .platillo__accion :global(svg) {
+    width: 15px;
+    height: 15px;
+    transition: transform var(--t-base) var(--ease-out);
+  }
+</style>
