@@ -190,6 +190,20 @@
   tr:hover .rm { opacity: 1; }
   .empty-row td { color: var(--muted); font-style: italic; text-align: center; }
   table.extra thead th { background: var(--ink-2); }
+  table.visits thead th { background: var(--tint); color: var(--ink-2); border-bottom: 1px solid var(--gold); }
+  table.visits tbody td { padding: 4px 8px; }
+  table.visits td.idx { color: var(--muted); font-variant-numeric: tabular-nums; }
+  table.visits select.in { font-weight: 600; }
+  .visit-count {
+    display: inline-flex; align-items: baseline; gap: 6px;
+    margin-left: auto; padding: 2px 10px; border-radius: 999px;
+    background: var(--ink); color: #fff;
+    font-family: var(--sans); font-size: 8pt; font-weight: 600; letter-spacing: .04em;
+  }
+  .visit-count b { color: var(--gold-lt); font-size: 10pt; }
+  .visit-count + .tool { margin-left: 8px; }
+  .visit-meta { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-bottom: 6px; font-size: 8.5pt; color: var(--ink-2); }
+  .visit-meta .lbl { display: inline; margin-right: 6px; }
   .addbtn {
     font: 600 7.5pt var(--sans); letter-spacing: .06em; text-transform: uppercase;
     color: var(--gold-dk); background: none; border: 1px dashed var(--gold); border-radius: 4px;
@@ -326,7 +340,7 @@
     .foot .thanks { font-size: 10.5pt; }
     .foot .contact { font-size: 8pt; margin-top: 1px; }
     .instructions { line-height: 1.35; }
-    body.clean tr.is-empty, body.clean .extra-sec.is-empty { display: none; }
+    body.clean tr.is-empty, body.clean .extra-sec.is-empty, body.clean .visits-sec.is-empty { display: none; }
     body.clean .notes .n.is-empty { display: none; }
     body.clean .pm-other.is-empty { display: none; }
     body.clean select.in.is-empty { color: transparent; }
@@ -451,6 +465,23 @@
       <div><span class="lbl">Assigned Cleaner / Team</span><span class="v"><span class="f" contenteditable="true" data-k="team" data-ph="[If applicable]"></span></span></div>
       <div class="span2"><span class="lbl">Booking Reference No.</span><span class="v"><span class="f" contenteditable="true" data-k="bookRef" data-ph="[If applicable]"></span></span></div>
     </div>
+  </section>
+
+  <!-- Monthly cleaning visits -->
+  <section class="sec visits-sec">
+    <h2>CLEANING VISITS THIS MONTH
+      <span class="visit-count" title="Counted automatically from the visits marked Completed"><b data-out="visitDone">0</b> <span data-out="visitWord">cleanings completed</span><span data-out="visitMore"></span></span>
+      <button class="addbtn tool" id="btnAddVisit" type="button">+ Add visit</button>
+    </h2>
+    <div class="visit-meta">
+      <span><span class="lbl">Service Month</span><span class="f" contenteditable="true" data-k="visitMonth" data-ph="[Month YYYY]"></span></span>
+      <span><span class="lbl">Frequency</span><span class="f" contenteditable="true" data-k="visitFreq" data-ph="[e.g., Weekly / Every 2 weeks]"></span></span>
+    </div>
+    <table class="items visits" id="visitTable">
+      <colgroup><col style="width:6%"><col style="width:20%"><col style="width:38%"><col style="width:20%"><col style="width:16%"></colgroup>
+      <thead><tr><th>#</th><th>Cleaning Date</th><th>Service Performed / Notes</th><th>Cleaner / Team</th><th>Status</th></tr></thead>
+      <tbody></tbody>
+    </table>
   </section>
 
   <!-- Services -->
@@ -603,7 +634,7 @@ const SAMPLE = {
     billAddr: '123 Example Street', billCity: 'Annapolis, MD 21401',
     svcAddr: '456 Sample Avenue, Unit 2', svcCity: 'Annapolis, MD 21403', propType: 'Airbnb / Short-Term Rental',
     arrival: '9:00 AM', durType: 'Estimated', duration: '4 hours', team: 'Team A', bookRef: 'BK-SAMPLE-01',
-    discVal: '10', discType: 'pct', taxVal: '', taxType: 'pct', deposit: '100.00', prevPay: '',
+    visitMonth: 'October 2026', visitFreq: 'Weekly', discVal: '10', discType: 'pct', taxVal: '', taxType: 'pct', deposit: '100.00', prevPay: '',
     payMethod: 'Credit Card', payDate: 'MM/DD/YYYY', payRef: 'Deposit — [Transaction ID]',
     nAreas: 'Kitchen, 2 bathrooms, 2 bedrooms, living room', nAccess: 'Lockbox at front door — code provided separately',
     nAddons: 'Pet hair removal (approved by customer)', nLimits: 'Exterior windows not included'
@@ -613,6 +644,12 @@ const SAMPLE = {
     { name: 'Kitchen Deep Cleaning', detail: '', area: 'Kitchen', qty: '1', price: '75.00' },
     { name: 'Interior Window Cleaning', detail: 'Per window', area: 'Living room, bedrooms', qty: '8', price: '6.00' },
     { name: 'Laundry and Linen Change', detail: '', area: '2 bedrooms', qty: '2', price: '15.00' }
+  ],
+  visits: [
+    { date: '10/03/2026', service: 'Standard Residential Cleaning', team: 'Team A', status: 'Completed' },
+    { date: '10/10/2026', service: 'Standard Residential Cleaning', team: 'Team A', status: 'Completed' },
+    { date: '10/17/2026', service: 'Deep Cleaning', team: 'Team A', status: 'Completed' },
+    { date: '10/24/2026', service: 'Standard Residential Cleaning', team: 'Team A', status: 'Scheduled' }
   ],
   extras: [
     { name: 'Pet Hair Removal', detail: '', area: 'Approved by customer', qty: '1', price: '35.00' }
@@ -701,6 +738,49 @@ const SAMPLE = {
     } else if (has && er) er.remove();
     if (kind === 'extra') $('.extra-sec').classList.toggle('is-empty', !has);
   }
+  /* ---------- Monthly cleaning visits ---------- */
+  const VISIT_STATUS = ['Completed', 'Scheduled', 'Cancelled', 'Rescheduled'];
+  function addVisit(data = {}) {
+    const tr = document.createElement('tr');
+    tr.className = 'visit';
+    tr.innerHTML = `
+      <td class="idx"></td>
+      <td><span class="f block v-date" contenteditable="true" data-ph="MM/DD/YYYY"></span></td>
+      <td><input class="in v-svc" list="svcList" placeholder="[Service performed]" aria-label="Service performed"></td>
+      <td><span class="f block v-team" contenteditable="true" data-ph="[If applicable]"></span></td>
+      <td><span class="act-wrap"><select class="in v-status" aria-label="Visit status">${VISIT_STATUS.map(o => `<option>${o}</option>`).join('')}</select><button class="rm no-print" type="button" title="Remove visit" aria-label="Remove visit">×</button></span></td>`;
+    $('.v-date', tr).textContent = data.date ?? '';
+    $('.v-svc', tr).value = data.service ?? '';
+    $('.v-team', tr).textContent = data.team ?? '';
+    $('.v-status', tr).value = data.status || 'Completed';
+    $('#visitTable tbody').appendChild(tr);
+    return tr;
+  }
+  const visitsData = () => $$('#visitTable tr.visit').map(tr => ({
+    date: $('.v-date', tr).textContent.trim(),
+    service: $('.v-svc', tr).value,
+    team: $('.v-team', tr).textContent.trim(),
+    status: $('.v-status', tr).value,
+  }));
+  /* A visit counts once it has a date or a service; only "Completed" visits count as cleanings done */
+  function countVisits() {
+    let done = 0, upcoming = 0, n = 0;
+    $$('#visitTable tr.visit').forEach(tr => {
+      const filled = !!($('.v-date', tr).textContent.trim() || $('.v-svc', tr).value.trim());
+      tr.classList.toggle('is-empty', !filled);
+      $('.idx', tr).textContent = filled ? ++n : '';
+      if (!filled) return;
+      const st = $('.v-status', tr).value;
+      if (st === 'Completed') done++;
+      else if (st === 'Scheduled' || st === 'Rescheduled') upcoming++;
+    });
+    const out = (k, v) => $$(`[data-out="${k}"]`).forEach(el => el.textContent = v);
+    out('visitDone', done);
+    out('visitWord', done === 1 ? 'cleaning completed' : 'cleanings completed');
+    out('visitMore', upcoming ? ` · ${upcoming} scheduled` : '');
+    $('.visits-sec').classList.toggle('is-empty', !n);
+  }
+
   const rowsData = kind => $$((kind === 'svc' ? '#svcTable' : '#extraTable') + ' tr.item').map(tr => ({
     name: $('.svc-name', tr).value,
     detail: $('.svc-detail', tr).textContent.trim(),
@@ -765,6 +845,7 @@ const SAMPLE = {
     $$('.notes .n').forEach(n => n.classList.toggle('is-empty', !$('.f', n).textContent.trim()));
 
     $$('select.in').forEach(el => el.classList.toggle('is-empty', el.value === ''));
+    countVisits();
     countPlaceholders();
   }
 
@@ -794,13 +875,15 @@ const SAMPLE = {
   document.addEventListener('click', e => {
     const rm = e.target.closest('.rm');
     if (!rm) return;
-    const tr = rm.closest('tr'), kind = tr.closest('#svcTable') ? 'svc' : 'extra';
+    const tr = rm.closest('tr');
+    if (tr.classList.contains('visit')) { tr.remove(); calc(); return; }
+    const kind = tr.closest('#svcTable') ? 'svc' : 'extra';
     tr.remove(); emptyState(kind); calc();
   });
 
   /* ---------- Save / load ---------- */
   function snapshot() {
-    const data = { version: 1, fields: {}, services: rowsData('svc'), extras: rowsData('extra') };
+    const data = { version: 1, fields: {}, services: rowsData('svc'), extras: rowsData('extra'), visits: visitsData() };
     fields().forEach(el => { data.fields[el.dataset.k] = getVal(el); });
     return data;
   }
@@ -810,6 +893,7 @@ const SAMPLE = {
     $('#svcTable tbody').innerHTML = ''; $('#extraTable tbody').innerHTML = '';
     (data.services || []).forEach(r => addRow('svc', r));
     (data.extras || []).forEach(r => addRow('extra', r));
+    (data.visits || []).forEach(r => addVisit(r));
     emptyState('svc'); emptyState('extra');
     fields().forEach(tidy);
     calc();
@@ -818,8 +902,8 @@ const SAMPLE = {
   function blank(withRows = true) {
     fields().forEach(el => setVal(el, DEFAULTS[el.dataset.k] ?? ''));
     fields().forEach(tidy);
-    $('#svcTable tbody').innerHTML = ''; $('#extraTable tbody').innerHTML = '';
-    if (withRows) for (let i = 0; i < 3; i++) addRow('svc');
+    $('#svcTable tbody').innerHTML = ''; $('#extraTable tbody').innerHTML = ''; $('#visitTable tbody').innerHTML = '';
+    if (withRows) { for (let i = 0; i < 3; i++) addRow('svc'); for (let i = 0; i < 4; i++) addVisit(); }
     emptyState('svc'); emptyState('extra');
     calc();
   }
@@ -862,6 +946,7 @@ const SAMPLE = {
   };
   $('#btnNew').onclick = () => { if (confirm('Start a new blank invoice? Unsaved changes will be lost.')) blank(); };
   $('#btnAddSvc').onclick = () => { $('.svc-name', addRow('svc')).focus(); calc(); };
+  $('#btnAddVisit').onclick = () => { $('.v-date', addVisit()).focus(); calc(); };
   $('#btnAddExtra').onclick = () => { $('.svc-name', addRow('extra', { qty: '1' })).focus(); calc(); };
   $('#btnSameAddr').onclick = () => {
     [['billAddr', 'svcAddr'], ['billCity', 'svcCity']].forEach(([a, b]) => $(`[data-k="${b}"]`).textContent = $(`[data-k="${a}"]`).innerText.trim());

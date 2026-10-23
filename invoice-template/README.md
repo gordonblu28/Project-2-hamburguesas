@@ -19,13 +19,14 @@ Keep the `assets/` folder next to `invoice.html` so the logo loads.
 2. **Header:** click **New Invoice #** (generates `IMT-YYYYMMDD-01`, `-02`, …) and **Issue Date = Today**. Type the payment due date and choose a status (Draft, Unpaid, Partially Paid, Paid, Overdue). The status pill changes color.
 3. **Bill To / Service Location:** click any gray hint and type over it. If the cleaning happens at the billing address, click **Same as billing**. Pick the property type.
 4. **Booking & appointment:** enter the reservation date, scheduled cleaning date, and arrival time. Leave **Actual Cleaning Date** blank until the job is finished; it prints as "Pending". Use the Estimated/Actual switch for duration.
-5. **Services:** choose a service from the suggestions (Standard, Deep, Move-In/Move-Out, Airbnb Turnover, Office, Commercial, Bathroom, Kitchen, Windows, Refrigerator, Oven, Laundry/Linen, Additional Room, Special Request) or type your own. Then enter the area, quantity, and unit price. **+ Add service line** adds a row, and the **×** on the right removes one.
-6. **Additional charges:** add these only when the customer has approved them (additional labor, excessive buildup, special supplies, pet hair, other add-ons). The section is hidden on the printed invoice when it is empty.
-7. **Summary:** enter a discount (% or $) or tax (% or $) only if it applies. Tax is never added automatically. Enter any deposit received and previous payments.
-8. **Payment information:** set the method, payment date, and transaction ID. Edit the payment instructions if needed.
-9. **Notes:** fill only the service-note lines you need. Empty lines are left off the printout. The red **Internal Notes** box under the page is for staff and is **never printed**.
-10. **Terms:** replace each highlighted placeholder, such as `[Payment Terms]` or `[Cancellation Policy]`, with your actual policy. You can do this once in the file itself so every invoice includes it. The toolbar counts how many bracketed placeholders are left.
-11. Click **Print / Save PDF**, choose **Save as PDF**, paper size **Letter**, and turn on **Background graphics**.
+5. **Cleaning visits this month** (for recurring customers): enter the service month and frequency, then add one line per visit with its date, service, team, and status (Completed, Scheduled, Cancelled, Rescheduled). **+ Add visit** adds more lines. The badge counts **completed cleanings** automatically and also shows how many are still scheduled. If no visits are entered, the section is left off the printout, as on a one-time cleaning invoice. If you bill per visit, enter the completed count as the **Qty** on the service line.
+6. **Services:** choose a service from the suggestions (Standard, Deep, Move-In/Move-Out, Airbnb Turnover, Office, Commercial, Bathroom, Kitchen, Windows, Refrigerator, Oven, Laundry/Linen, Additional Room, Special Request) or type your own. Then enter the area, quantity, and unit price. **+ Add service line** adds a row, and the **×** on the right removes one.
+7. **Additional charges:** add these only when the customer has approved them (additional labor, excessive buildup, special supplies, pet hair, other add-ons). The section is hidden on the printed invoice when it is empty.
+8. **Summary:** enter a discount (% or $) or tax (% or $) only if it applies. Tax is never added automatically. Enter any deposit received and previous payments.
+9. **Payment information:** set the method, payment date, and transaction ID. Edit the payment instructions if needed.
+10. **Notes:** fill only the service-note lines you need. Empty lines are left off the printout. The red **Internal Notes** box under the page is for staff and is **never printed**.
+11. **Terms:** replace each highlighted placeholder, such as `[Payment Terms]` or `[Cancellation Policy]`, with your actual policy. You can do this once in the file itself so every invoice includes it. The toolbar counts how many bracketed placeholders are left.
+12. Click **Print / Save PDF**, choose **Save as PDF**, paper size **Letter**, and turn on **Background graphics**.
 
 **Saving records:** **Save Draft** and **Load Draft** keep one invoice in this browser. **Export Data** downloads the invoice as a `.json` file, and **Import Data** reopens it later.
 
